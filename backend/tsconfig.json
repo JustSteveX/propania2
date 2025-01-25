@@ -8,11 +8,10 @@
 		"outDir": "dist",
 		"baseUrl": ".",
 		"paths": {
-			"@backend/*": ["./*"],
 			"@shared/*": ["types/*"]
 		},
 		"allowJs": false
 	},
-	"include": ["server.ts", "backend/**/*.ts"],
+	"include": ["src/**/*"],
 	"exclude": ["node_modules"]
 }
