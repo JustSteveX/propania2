@@ -9,7 +9,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 	constructor() {
 		super({ key: 'PlayerSelectionScene' });
-		this.socket = io('http://localhost:3001');
+		this.socket = io('http://localhost:3001', { withCredentials: true });
 	}
 
 	preload() {

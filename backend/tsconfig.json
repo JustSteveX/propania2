@@ -6,11 +6,13 @@
 		"strict": true,
 		"esModuleInterop": true,
 		"outDir": "dist",
-		"baseUrl": ".",
+		"baseUrl": "./",
 		"paths": {
 			"@shared/*": ["types/*"]
 		},
-		"allowJs": false
+		"allowJs": false,
+		"resolveJsonModule": true,
+		"skipLibCheck": true
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules"]
