@@ -14,7 +14,7 @@ export default class LoginScene extends Phaser.Scene {
 
 	constructor() {
 		super({ key: 'LoginScene' });
-		this.socket = io('http://localhost:3001', { withCredentials: true });
+		this.socket = io('http://localhost:3001');
 	}
 
 	init() {
@@ -206,7 +206,7 @@ export default class LoginScene extends Phaser.Scene {
 			return;
 		}
 
-		fetch('http://localhost:3001/auth/register', {
+		fetch('http://localhost:3001/register', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -243,7 +243,7 @@ export default class LoginScene extends Phaser.Scene {
 			return;
 		}
 
-		fetch('http://localhost:3001/auth/login', {
+		fetch('http://localhost:3001/login', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
