@@ -1,5 +1,5 @@
 import { query } from '../index.js';
-import { DbUser } from '../models/users.model';
+import type { DbUser } from '../models/users.model';
 import bcrypt from 'bcrypt';
 
 export async function insertUser(name: string, email: string, pass: string) {
@@ -7,8 +7,8 @@ export async function insertUser(name: string, email: string, pass: string) {
 	const creationDate: Date = new Date();
 
 	const user: DbUser = {
-		name: name,
-		email: email,
+		name,
+		email,
 		pass: hashedPassword,
 		createdAt: creationDate,
 		updatedAt: creationDate,

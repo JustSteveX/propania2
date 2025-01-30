@@ -1,4 +1,4 @@
-import { query } from './index';
+import { query } from './index.js';
 
 export async function findAll<T>(tableName: string): Promise<T[]> {
 	return query<T[]>(`SELECT * FROM ??`, [tableName]);

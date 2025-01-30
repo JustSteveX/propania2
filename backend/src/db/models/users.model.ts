@@ -1,4 +1,4 @@
-import { Auditable } from './auditable.type';
+import type { Auditable } from './auditable.type';
 
 export type DbUser = Auditable & {
 	id?: string;
