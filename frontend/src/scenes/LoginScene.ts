@@ -5,7 +5,7 @@ import { io } from 'socket.io-client';
 export default class LoginScene extends Phaser.Scene {
 	private emailtext!: HTMLElement;
 	private passwordtext!: HTMLElement;
-	private feedbacktext!: HTMLElement; // Hier ist die korrekte Deklaration
+	private feedbacktext!: HTMLElement;
 	private emailInput!: HTMLInputElement;
 	private passwordInput!: HTMLInputElement;
 	private socket: Socket;

@@ -3,6 +3,7 @@ import cors from 'cors';
 import { Server } from 'socket.io';
 import http from 'http';
 import authRoutes from './routes/auth.js';
+import playersRoutes from './routes/players.js';
 import protectedRoutes from './routes/protected.js';
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(express.json());
 
 // Routen
 app.use('/auth', authRoutes); // Authentifizierungs Routen
+app.use('/players', playersRoutes); // Spieler Routen
 app.use('/protected', protectedRoutes); // Geschützte Routen
 
 // Socket.IO Verbindungslogik
