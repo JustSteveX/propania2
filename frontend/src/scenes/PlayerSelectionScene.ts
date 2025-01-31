@@ -12,6 +12,11 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 		this.socket = io('http://localhost:3001');
 	}
 
+	init() {
+		this.scene.get('LoginScene').events.emit('deactivateInputs');
+		this.scene.sleep('LoginScene');
+	}
+
 	preload() {
 		this.load.image('background', 'assets/images/background.png');
 		this.load.image('playerselection', 'assets/images/playerselection.png');

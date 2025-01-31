@@ -34,6 +34,9 @@ export default class LoginScene extends Phaser.Scene {
 	}
 
 	create() {
+		// Events
+		this.events.on('deactivateInputs', this.deactivateInputs, this);
+
 		// Sounds
 
 		this.clickSound = this.sound.add('clickSound');
