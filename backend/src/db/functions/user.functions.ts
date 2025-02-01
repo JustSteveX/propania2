@@ -4,22 +4,18 @@ import bcrypt from 'bcrypt';
 
 export async function insertUser(name: string, email: string, pass: string) {
 	const hashedPassword = await bcrypt.hash(pass, 10);
-	const creationDate: Date = new Date();
 
 	const user: DbUser = {
-		name,
 		email,
-		pass: hashedPassword,
-		createdAt: creationDate,
-		updatedAt: creationDate,
+		password: hashedPassword,
 	};
 
 	const createdUser = await query<DbUser>(
-		'INSERT INTO users (name, email, pass, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-		[user.name, user.email, user.pass, user.createdAt, user.updatedAt]
+		'INSERT INTO account (email, password) VALUES (?, ?)',
+		[user.email, user.password]
 	);
 
-	delete createdUser.pass;
+	delete createdUser.password;
 
 	return createdUser;
 }

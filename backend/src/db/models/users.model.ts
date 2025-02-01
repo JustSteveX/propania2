@@ -1,8 +1,5 @@
-import type { Auditable } from './auditable.type';
-
-export type DbUser = Auditable & {
+export type DbUser = {
 	id?: string;
-	name: string;
 	email: string;
-	pass?: string;
+	password?: string;
 };

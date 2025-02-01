@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
 
 		// Check if user exists
 		const [existingUser] = await query<DbUser[]>(
-			'SELECT * FROM users WHERE name = ?',
+			'SELECT * FROM account WHERE email = ?',
 			[email]
 		);
 		if (existingUser) {
@@ -49,7 +49,7 @@ router.post('/login', async (req, res) => {
 
 		// Nutzer suchen
 		const [user] = await query<DbUser[]>(
-			'SELECT * FROM users WHERE email = ?',
+			'SELECT * FROM account WHERE email = ?',
 			[email]
 		);
 		if (!user) {
@@ -58,13 +58,13 @@ router.post('/login', async (req, res) => {
 		}
 
 		// Passwort validieren
-		const isValid = await bcrypt.compare(password, user.pass!);
+		const isValid = await bcrypt.compare(password, user.password!);
 		if (!isValid) {
 			res.status(401).json({ message: 'Ungültige Anmeldedaten' });
 			return;
 		}
 
-		delete user.pass;
+		delete user.password;
 
 		// Token generieren
 		const token = jwt.sign(user, ENV.JWT_SECRET, { expiresIn: '1h' });
