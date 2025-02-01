@@ -1,10 +1,17 @@
 import { query } from '../index.js';
-import type { Player } from '../models/player.models.js';
+import type { PlayerType, Player } from '../models/player.model.js';
 
-export async function insertPlayer(playername: string) {
-	const createdPlayer = await query<Player>(
+export async function insertPlayer(player: Player) {
+	const createdPlayer = await query<PlayerType>(
 		'INSERT INTO players (name,money,exp,level,positionX,positionY) VALUES (?,?,?,?,?,?)',
-		[playername, 0, 0, 1, 0, 0]
+		[
+			player.name,
+			player.money,
+			player.exp,
+			player.level,
+			player.positionX,
+			player.positionY,
+		]
 	);
 
 	return createdPlayer;

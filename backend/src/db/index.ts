@@ -9,7 +9,7 @@ const pool = mariadb.createPool({
 	connectionLimit: ENV.DB_CONNECTION_LIMIT
 		? Number(ENV.DB_CONNECTION_LIMIT)
 		: 5,
-	allowPublicKeyRetrieval: true,
+	//allowPublicKeyRetrieval: true,
 	port: ENV.DB_PORT ? Number(ENV.DB_PORT) : 3306,
 });
 
@@ -22,6 +22,7 @@ export async function query<T>(sql: string, params?: unknown[]): Promise<T> {
 		connection = await pool.getConnection();
 		return await connection.query<T>(sql, params);
 	} catch (err) {
+		// eslint-disable-next-line no-console
 		console.error('Datenbankfehler:', err);
 		throw err;
 	} finally {

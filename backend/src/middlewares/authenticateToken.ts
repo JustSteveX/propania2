@@ -2,10 +2,10 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../config/app.js';
-import type { User } from 'src/types/user.type';
+import type { Account } from './../db/models/account.model.js';
 
 export interface AuthenticatedRequest extends Request {
-	user?: User;
+	account?: Account;
 }
 
 export function authenticateToken(
@@ -21,12 +21,12 @@ export function authenticateToken(
 		return;
 	}
 
-	jwt.verify(token, ENV.JWT_SECRET, (err, user) => {
+	jwt.verify(token, ENV.JWT_SECRET, (err, account) => {
 		if (err) {
-			return res.status(403).json({ message: 'Ungültiger Token' });
+			res.status(403).json({ message: 'Ungültiger Token' });
 		}
 
-		req.user = user as User; // Typ setzen
+		req.account = account as Account; // Typ setzen
 		next();
 	});
 }

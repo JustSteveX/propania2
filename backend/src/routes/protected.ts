@@ -10,7 +10,7 @@ router.get(
 	authenticateToken,
 	(req: AuthenticatedRequest, res) => {
 		// Hier hat der Nutzer Zugriff
-		res.json({ message: `Willkommen, ${req.user?.name}` });
+		res.json({ message: `Willkommen, ${req.account?.email}` });
 	}
 );
 

@@ -7,8 +7,8 @@ import { ENV } from '../config/app.js';
 import { query } from './../db/index.js';
 import type { AuthenticatedRequest } from '../middlewares/authenticateToken';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
-import { DbUser } from './../db/models/users.model.js';
-import { insertUser } from './../db/functions/user.functions.js';
+import type { Account } from '../db/models/account.model.js';
+import { insertAccount } from '../db/functions/account.functions.js';
 
 const router = Router();
 
@@ -21,16 +21,16 @@ router.post('/register', async (req, res) => {
 		};
 
 		// Check if user exists
-		const [existingUser] = await query<DbUser[]>(
+		const [existingAccount] = await query<Account[]>(
 			'SELECT * FROM account WHERE email = ?',
 			[email]
 		);
-		if (existingUser) {
+		if (existingAccount) {
 			res.status(400).json({ message: 'Benutzer existiert bereits' });
 			return;
 		}
 
-		insertUser(email, email, password);
+		insertAccount(email, password);
 
 		res.status(201).json({ message: 'Benutzer registriert!' });
 	} catch (error) {
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
 		};
 
 		// Nutzer suchen
-		const [user] = await query<DbUser[]>(
+		const [user] = await query<Account[]>(
 			'SELECT * FROM account WHERE email = ?',
 			[email]
 		);
@@ -81,7 +81,7 @@ router.post(
 	authenticateToken,
 	(req: AuthenticatedRequest, res: Response) => {
 		// Wenn die Middleware `authenticateToken` erfolgreich ist, ist der Token gültig
-		res.status(200).json({ message: 'Token is valid', user: req.user });
+		res.status(200).json({ message: 'Token is valid', account: req.account });
 	}
 );
 
