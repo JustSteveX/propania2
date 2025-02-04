@@ -1,5 +1,6 @@
 export type Player = {
 	id?: number;
+	account_id: number;
 	name: string;
 	money: number;
 	exp: number;

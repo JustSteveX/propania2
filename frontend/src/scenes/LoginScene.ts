@@ -38,7 +38,6 @@ export default class LoginScene extends Phaser.Scene {
 		this.events.on('deactivateInputs', this.deactivateInputs, this);
 
 		// Sounds
-
 		this.clickSound = this.sound.add('clickSound');
 
 		const centerX = this.scale.width / 2;
@@ -56,19 +55,19 @@ export default class LoginScene extends Phaser.Scene {
 			.image(centerX, centerY - 250, 'propania2')
 			.setScale(0.8, 0.8);
 
-		// Skalierung berechnen, um den Bildschirm zu füllen
+		// Skalierung berechnen
 		const scaleX = this.scale.width / bg.width;
 		const scaleY = this.scale.height / bg.height;
 		const scale = Math.max(scaleX, scaleY);
 		bg.setScale(scale);
 		bg.setPosition(0, 0);
 
-		// Berechne die Positionen für das responsive Login-Formular
+		// Positionen für das Login-Formular
 		const inputWidth = 200;
 		const inputHeight = 30;
-		const gap = 20; // Abstand zwischen den Eingabefeldern
+		const gap = 20;
 
-		// E-Mail-Text erstellen und als Klassenattribute speichern
+		// E-Mail-Text
 		this.emailtext = document.createElement('div');
 		this.emailtext.style.left = `${centerX - inputWidth / 2 + 70}px`;
 		this.emailtext.style.top = `${centerY - inputHeight / 2 - (inputHeight + gap) - 80}px`;
@@ -76,10 +75,7 @@ export default class LoginScene extends Phaser.Scene {
 		this.emailtext.style.position = 'absolute';
 		document.body.appendChild(this.emailtext);
 
-		// Add it to the DOM
-		document.body.appendChild(this.emailtext);
-
-		// E-Mail-Eingabefeld erstellen und zentrieren
+		// E-Mail-Eingabefeld
 		this.emailInput = document.createElement('input');
 		this.emailInput.type = 'email';
 		this.emailInput.autocomplete = 'email';
@@ -90,9 +86,27 @@ export default class LoginScene extends Phaser.Scene {
 		this.emailInput.style.width = `${inputWidth}px`;
 		this.emailInput.style.height = `${inputHeight}px`;
 		this.emailInput.style.fontSize = '16px';
-		this.emailInput.style.zIndex = '10'; // Sicherstellen, dass das Eingabefeld im Vordergrund bleibt
+		this.emailInput.style.zIndex = '10';
+		this.emailInput.style.border = '1px solid #ccc'; // Standard-Rahmen
 
-		// Passwort-Text erstellen und als Klassenattribute speichern
+		// E-Mail-Validierung hinzufügen
+		this.emailInput.addEventListener('input', (e) => {
+			const email = (e.target as HTMLInputElement).value;
+			const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+
+			if (emailRegex.test(email)) {
+				this.emailInput.style.border = '2px solid #4CAF50';
+				this.feedbacktext.innerHTML = '';
+			} else {
+				if (this.emailInput.value.length > 0) {
+					this.emailInput.style.border = '2px solid #f44336';
+				} else {
+					this.emailInput.style.border = '1px solid #ccc';
+				}
+			}
+		});
+
+		// Passwort-Text
 		this.passwordtext = document.createElement('div');
 		this.passwordtext.style.left = `${centerX - inputWidth / 2 + 70}px`;
 		this.passwordtext.style.top = `${centerY - inputHeight / 2 - (inputHeight + gap + 10)}px`;
@@ -100,9 +114,7 @@ export default class LoginScene extends Phaser.Scene {
 		this.passwordtext.style.position = 'absolute';
 		document.body.appendChild(this.passwordtext);
 
-		document.body.appendChild(this.passwordtext);
-
-		// Passwort-Eingabefeld erstellen und zentrieren
+		// Passwort-Eingabefeld
 		this.passwordInput = document.createElement('input');
 		this.passwordInput.type = 'password';
 		this.passwordInput.autocomplete = 'current-password';
@@ -113,64 +125,49 @@ export default class LoginScene extends Phaser.Scene {
 		this.passwordInput.style.width = `${inputWidth}px`;
 		this.passwordInput.style.height = `${inputHeight}px`;
 		this.passwordInput.style.fontSize = '16px';
-		this.passwordInput.style.zIndex = '10'; // Sicherstellen, dass das Eingabefeld im Vordergrund bleibt
+		this.passwordInput.style.zIndex = '10';
 
-		// Eingabefelder dem Dokument hinzufügen
+		// Elemente hinzufügen
 		document.body.appendChild(this.emailInput);
 		document.body.appendChild(this.passwordInput);
 
-		// Login-Button als Bild erstellen
+		// Login-Button
 		const loginButton = this.add
-			.image(centerX, centerY + 50, 'loginbutton') // Bild für den Login-Button
-			.setInteractive() // Macht das Bild interaktiv
+			.image(centerX, centerY + 50, 'loginbutton')
+			.setInteractive()
 			.setScale(0.3, 0.3)
 			.on('pointerdown', () => {
-				this.handleLogin(); // Erste Funktion
-				this.handleClickSound(); // Zweite Funktion
+				this.handleLogin();
+				this.handleClickSound();
 			})
-			.on('pointerover', () => {
-				loginButton.setScale(0.31, 0.31);
-			})
-			.on('pointerout', () => {
-				loginButton.setScale(0.3, 0.3);
-			});
+			.on('pointerover', () => loginButton.setScale(0.31, 0.31))
+			.on('pointerout', () => loginButton.setScale(0.3, 0.3));
 
-		// Event-Handler für Klicks
-
-		// Registrieren-Button als Bild erstellen
+		// Registrieren-Button
 		const registerButton = this.add
-			.image(centerX, centerY + 120, 'registerbutton') // Bild für den Registrieren-Button
-			.setInteractive() // Macht das Bild interaktiv
+			.image(centerX, centerY + 120, 'registerbutton')
+			.setInteractive()
 			.setScale(0.3, 0.3)
 			.on('pointerdown', () => {
-				this.handleRegister(); // Erste Funktion
-				this.handleClickSound(); // Zweite Funktion
+				this.handleRegister();
+				this.handleClickSound();
 			})
-			.on('pointerover', () => {
-				registerButton.setScale(0.31, 0.31);
-			})
-			.on('pointerout', () => {
-				registerButton.setScale(0.3, 0.3);
-			});
+			.on('pointerover', () => registerButton.setScale(0.31, 0.31))
+			.on('pointerout', () => registerButton.setScale(0.3, 0.3));
 
-		// Rückmeldungstext initialisieren
+		// Feedback-Text
 		this.feedbacktext = document.createElement('div');
 		this.feedbacktext.style.left = `${centerX - inputWidth / 2 + 30}px`;
 		this.feedbacktext.style.top = `${centerY - inputHeight / 2 - (inputHeight + gap - 230)}px`;
-		this.feedbacktext.innerText = '';
 		this.feedbacktext.style.position = 'absolute';
-
+		this.feedbacktext.style.color = '#f44336';
 		document.body.appendChild(this.feedbacktext);
 
-		// Empfang von Servernachrichten
-		this.socket.on('loginSuccess', (message: string) => {
-			console.log(message); // z.B. "Login erfolgreich"
-		});
+		// Server-Kommunikation
+		this.socket.on('loginSuccess', (message: string) => console.log(message));
+		this.socket.on('loginFailed', (message: string) => console.log(message));
 
-		this.socket.on('loginFailed', (message: string) => {
-			console.log(message); // z.B. "Ungültige Anmeldedaten"
-		});
-
+		// Spiel-Start-Text
 		this.add
 			.text(centerX - 100, centerY + inputHeight + 170, 'To the Game', {
 				fontSize: '32px',
@@ -180,32 +177,23 @@ export default class LoginScene extends Phaser.Scene {
 				this.scene.start('GameScene');
 				this.scene.sleep();
 			});
-
-		// Initialen Text für Nachrichten anzeigen
-		const messageText = this.add
-			.text(centerX, centerY - 200, '', {
-				font: '32px Arial',
-				align: 'center',
-			})
-			.setOrigin(0.5);
-
-		// Empfang von Nachrichten vom Server (verwendet die `socket`-Eigenschaft)
-		this.socket.on('message', (message: string) => {
-			// Die Nachricht im Spiel anzeigen
-			messageText.setText(message); // Text im Spiel aktualisieren
-		});
 	}
 
-	update() {
-		// Spiel-Logik für den Update-Loop
-	}
+	update() {}
 
 	handleRegister() {
 		const email = this.emailInput.value;
 		const password = this.passwordInput.value;
+		const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 
 		if (!email || !password) {
-			this.feedbacktext.innerHTML = 'Please fill all fields !';
+			this.feedbacktext.innerHTML = 'Please fill all fields!';
+			return;
+		}
+
+		if (!emailRegex.test(email)) {
+			this.feedbacktext.innerHTML = 'Invalid email format!';
+			this.emailInput.style.border = '2px solid #f44336';
 			return;
 		}
 
@@ -217,21 +205,13 @@ export default class LoginScene extends Phaser.Scene {
 			body: JSON.stringify({ email, password }),
 		})
 			.then((response) => {
-				if (response.ok) {
-					return response.json() as Promise<{ message: string }>; // Erfolgsfall
-				} else {
-					// Fehlerfall: Wirft einen Fehler, der im catch-Block behandelt wird
-					return response.json().then((errorData: { message: string }) => {
-						throw new Error(errorData.message || 'Failed to register');
-					});
-				}
+				if (response.ok) return response.json() as Promise<{ message: string }>;
+				return response.json().then((errorData: { message: string }) => {
+					throw new Error(errorData.message || 'Failed to register');
+				});
 			})
-			.then((data) => {
-				// Erfolgreiche Registrierung
-				this.feedbacktext.innerHTML = data.message;
-			})
+			.then((data) => (this.feedbacktext.innerHTML = data.message))
 			.catch((error) => {
-				// Fehlerbehandlung
 				console.error('Failed to register:', error.message);
 				this.feedbacktext.innerHTML = error.message;
 			});
@@ -240,9 +220,16 @@ export default class LoginScene extends Phaser.Scene {
 	handleLogin() {
 		const email = this.emailInput.value;
 		const password = this.passwordInput.value;
+		const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 
 		if (!email || !password) {
-			this.feedbacktext.innerHTML = 'Please fill all fields !';
+			this.feedbacktext.innerHTML = 'Please fill all fields!';
+			return;
+		}
+
+		if (!emailRegex.test(email)) {
+			this.feedbacktext.innerHTML = 'Invalid email format!';
+			this.emailInput.style.border = '2px solid #f44336';
 			return;
 		}
 
@@ -254,16 +241,12 @@ export default class LoginScene extends Phaser.Scene {
 			body: JSON.stringify({ email, password }),
 		})
 			.then((response) => {
-				if (response.ok) {
-					return response.json();
-				}
+				if (response.ok) return response.json();
 				throw new Error('Login failed');
 			})
 			.then((data) => {
 				if (data.token) {
-					// Token im localStorage speichern
 					localStorage.setItem('token', data.token);
-					console.log('Token gespeichert:', data.token); // Debugging
 					this.feedbacktext.innerHTML = 'Login successfull!';
 					this.deactivateInputs();
 					this.scene.start('PlayerSelectionScene');
@@ -271,9 +254,7 @@ export default class LoginScene extends Phaser.Scene {
 					throw new Error('Undefined Server Error');
 				}
 			})
-			.catch((error) => {
-				this.feedbacktext.innerHTML = error.message;
-			});
+			.catch((error) => (this.feedbacktext.innerHTML = error.message));
 	}
 
 	validateToken(token: string) {
@@ -281,22 +262,18 @@ export default class LoginScene extends Phaser.Scene {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`, // Stellen Sie sicher, dass der Token korrekt übermittelt wird
+				Authorization: `Bearer ${token}`,
 			},
 		})
 			.then((response) => {
 				if (response.ok) {
-					// Token ist gültig, weiter zur PlayerSelectionScene
 					this.scene.start('PlayerSelectionScene');
 				} else {
-					// Token ist ungültig, entfernen Sie es aus dem localStorage
 					localStorage.removeItem('token');
 					throw new Error('Invalid token');
 				}
 			})
-			.catch((error) => {
-				console.error('Token validation failed:', error);
-			});
+			.catch((error) => console.error('Token validation failed:', error));
 	}
 
 	deactivateInputs() {

@@ -9,10 +9,10 @@ import type { AuthenticatedRequest } from '../middlewares/authenticateToken';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
 import { DbUser } from './../db/models/users.model.js';
 import { insertUser } from './../db/functions/user.functions.js';
+import dns from 'dns/promises';
 
 const router = Router();
 
-// Registrierung
 router.post('/register', async (req, res) => {
 	try {
 		const { email, password } = req.body as {
@@ -20,22 +20,50 @@ router.post('/register', async (req, res) => {
 			password: string;
 		};
 
-		// Check if user exists
+		// ************* Regex-Validierung hinzufügen *************
+		const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+		if (!emailRegex.test(email)) {
+			res.status(400).json({ message: 'Invalid Mail E-Mail-Format' });
+			return;
+		}
+
+		// MX record validation
+		const domain = email.split('@')[1];
+		try {
+			const mxRecords = await dns.resolveMx(domain);
+			if (!mxRecords || mxRecords.length === 0) {
+				res.status(400).json({
+					message: 'Email domain is not configured to receive emails',
+				});
+				return;
+			}
+		} catch (error) {
+			res.status(400).json({
+				message: 'Email domain not valid',
+			});
+			return;
+		}
+
+		// Benutzer existenz prüfen
 		const [existingUser] = await query<DbUser[]>(
 			'SELECT * FROM account WHERE email = ?',
 			[email]
 		);
+
 		if (existingUser) {
-			res.status(400).json({ message: 'Benutzer existiert bereits' });
+			res.status(400).json({ message: 'Account already exists' });
 			return;
 		}
 
-		insertUser(email, email, password);
+		// ************* Korrektur: await hinzufügen *************
+		await insertUser(email, email, password);
 
-		res.status(201).json({ message: 'Benutzer registriert!' });
+		res.status(201).json({ message: 'User registerted successfully' });
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ message: error });
+		res.status(500).json({
+			message: error instanceof Error ? error.message : 'Intern Server Error',
+		});
 	}
 });
 
@@ -67,7 +95,14 @@ router.post('/login', async (req, res) => {
 		delete user.password;
 
 		// Token generieren
-		const token = jwt.sign(user, ENV.JWT_SECRET, { expiresIn: '1h' });
+		const token = jwt.sign(
+			{
+				id: user.id,
+				email: user.email,
+			},
+			ENV.JWT_SECRET,
+			{ expiresIn: '1h' }
+		);
 
 		res.json({ token });
 	} catch (error) {

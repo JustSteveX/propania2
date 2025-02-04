@@ -89,10 +89,10 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 				this.handleClickSound();
 			})
 			.on('pointerover', () => {
-				loginbutton.setScale(0.31, 0.31);
+				createbutton.setScale(0.31, 0.31);
 			})
 			.on('pointerout', () => {
-				loginbutton.setScale(0.3, 0.3);
+				createbutton.setScale(0.3, 0.3);
 			});
 
 		// Rückmeldungstext initialisieren

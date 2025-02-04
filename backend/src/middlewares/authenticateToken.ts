@@ -4,6 +4,14 @@ import jwt from 'jsonwebtoken';
 import { ENV } from '../config/app.js';
 import type { User } from 'src/types/user.type';
 
+declare global {
+	namespace Express {
+		interface User {
+			id: number;
+		}
+	}
+}
+
 export interface AuthenticatedRequest extends Request {
 	user?: User;
 }
