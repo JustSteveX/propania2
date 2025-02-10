@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { Socket } from 'socket.io-client';
-import { io } from 'socket.io-client';
+import SocketManager from '../SocketManager.ts';
 
 export default class LoginScene extends Phaser.Scene {
 	private emailtext!: HTMLElement;
@@ -14,7 +14,7 @@ export default class LoginScene extends Phaser.Scene {
 
 	constructor() {
 		super({ key: 'LoginScene' });
-		this.socket = io('http://localhost:3001');
+		this.socket = SocketManager.getSocket();
 	}
 
 	init() {

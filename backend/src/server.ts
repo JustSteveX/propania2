@@ -5,6 +5,7 @@ import http from 'http';
 import authRoutes from './routes/auth.js';
 import playersRoutes from './routes/players.js';
 import protectedRoutes from './routes/protected.js';
+import { Player } from './types/player.type.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -34,11 +35,20 @@ app.use('/auth', authRoutes); // Authentifizierungs Routen
 app.use('/players', playersRoutes); // Spieler Routen
 app.use('/protected', protectedRoutes); // Geschützte Routen
 
+let players: Player[] = [];
+
 // Socket.IO Verbindungslogik
 io.on('connection', (socket) => {
 	console.log('Ein Benutzer ist verbunden');
+
+	socket.on('login', (playerdata) => {
+		players.push({ ...playerdata, socketId: socket.id });
+		console.log('Spielerdaten:', players);
+	});
 	socket.on('disconnect', () => {
-		console.log('Ein Benutzer hat die Verbindung getrennt');
+		players = players.filter((player) => player.socketId !== socket.id);
+		console.log(players);
+		console.log('Client disconnected: ' + socket.id);
 	});
 });
 

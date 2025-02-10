@@ -1,7 +1,14 @@
 import Phaser from 'phaser';
 import type { Direction } from '../types/direction.enum';
+import type { Socket } from 'socket.io-client';
+import SocketManager from '../SocketManager.ts';
+import { Player } from 'src/types/players.type.ts';
 
 export default class UIScene extends Phaser.Scene {
+	private playerLvL?: Phaser.GameObjects.Text;
+	private playerExp?: Phaser.GameObjects.Text;
+	private playerMoney?: Phaser.GameObjects.Text;
+
 	private uiText?: Phaser.GameObjects.Text;
 	private velocityText?: Phaser.GameObjects.Text;
 	private lastDirection?: Phaser.GameObjects.Text;
@@ -9,12 +16,57 @@ export default class UIScene extends Phaser.Scene {
 	private pointer?: Phaser.Input.Pointer;
 	private joystickBase?: Phaser.GameObjects.Arc;
 	private joystickStick?: Phaser.GameObjects.Arc;
+	private socket: Socket;
+	private playerData!: Player;
 
 	constructor() {
 		super({ key: 'UIScene' });
+		this.socket = SocketManager.getSocket();
+	}
+
+	init(data: { playerData?: Player }) {
+		if (data.playerData) {
+			this.playerData = data.playerData;
+			console.log('Player received in UIScene:', this.playerData);
+		} else {
+			console.warn('No player data received in UIScene!');
+		}
 	}
 
 	create() {
+		this.playerLvL = this.add
+			.text(10, 30, 'LvL:' + this.playerData.level, {
+				fontSize: '18px',
+				color: '#000000',
+				backgroundColor: '#FFD700',
+			})
+			.setScrollFactor(0)
+			.setShadow(5, 5, '#FF4500', 5, true, true);
+
+		(this.playerExp = this.add
+			.text(20, 30, 'EXP:' + this.playerData.exp, {
+				fontSize: '18px',
+				color: '#000000',
+				backgroundColor: '#FFD700',
+			})
+			.setScrollFactor(0)
+			.setShadow(5, 5, '#FF4500', 5, true, true)).setPosition(
+			screen.availWidth / 2 - this.playerExp.displayWidth / 2,
+			30
+		);
+
+		(this.playerMoney = this.add
+			.text(10, 30, this.playerData.money + 'G', {
+				fontSize: '18px',
+				color: '#000000',
+				backgroundColor: '#FFD700',
+			})
+			.setScrollFactor(0)
+			.setShadow(5, 5, '#FF4500', 5, true, true)).setPosition(
+			screen.availWidth - this.playerMoney.displayWidth - 10,
+			30
+		);
+
 		// Füge den Text in der linken unteren Ecke hinzu
 		this.uiText = this.add
 			.text(10, this.cameras.main.height - 30, 'Player Position: (0, 0)', {

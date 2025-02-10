@@ -1,4 +1,5 @@
 export type Player = {
+	socketId?: string;
 	id?: number;
 	account_id: number;
 	name: string;

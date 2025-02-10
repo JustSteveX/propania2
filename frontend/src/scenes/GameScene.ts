@@ -4,8 +4,12 @@ import AnimationManager from '../animations/AnimationManager.js';
 import Phaser from 'phaser';
 import type { Vector2D } from '../types/direction.enum.ts';
 import { Direction } from '../types/direction.enum.ts';
+import { Player } from '../types/players.type.ts';
+import SocketManager from '../SocketManager.ts';
+import type { Socket } from 'socket.io-client';
 
 export default class GameScene extends Phaser.Scene {
+	private playerData!: Player;
 	private player?: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 	private item?: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
@@ -24,14 +28,24 @@ export default class GameScene extends Phaser.Scene {
 	private cameraControl?: CameraControl;
 	private inputManager?: InputManager;
 	private animationManager?: AnimationManager;
+	private playerNameText?: Phaser.GameObjects.Text;
+	private socket: Socket;
 
 	constructor() {
 		super({ key: 'GameScene' });
+		this.socket = SocketManager.getSocket();
 	}
 
-	init() {
+	init(data: { playerdata: Player }) {
+		if (data.playerdata) {
+			this.playerData = data.playerdata;
+			console.log('Player received in GameScene:', this.playerData);
+		} else {
+			console.warn('No player data received!');
+		}
 		this.scene.get('PlayerSelectionScene').events.emit('deactivateInputs');
 		this.scene.sleep('PlayerSelectionScene');
+		this.scene.launch('UIScene', { playerData: this.playerData });
 	}
 
 	preload() {
@@ -64,16 +78,41 @@ export default class GameScene extends Phaser.Scene {
 		// Spieler erstellen
 		this.player = this.physics.add
 			// -200 = ?, 900 = ?, 'player' = frameKey, 26 = idleIndex
-			.sprite(-200, 900, 'player', 26)
+			.sprite(
+				this.playerData.positionX,
+				this.playerData.positionY,
+				'player',
+				26
+			)
 			.setOrigin(0.5, 0.5)
 			.setScale(0.5);
+		this.player.setData('name', this.playerData.name);
+		this.player.setData('money', this.playerData.level);
+		this.player.setData('exp', this.playerData.exp);
+		this.player.setData('level', this.playerData.level);
 
 		this.physics.world.enable(this.player);
 		this.player.body.setSize(16, 16);
 		this.player.setDepth(10);
-		this.scene.launch('UIScene');
 		this.spriteObjects.push(this.player);
 		this.player.setOrigin(0.5, 1);
+
+		// Spielername über dem Kopf anzeigen
+		this.playerNameText = this.add
+			.text(
+				this.player.x,
+				this.player.y - 30, // Position über dem Spieler
+				this.player.getData('name'), // Name aus gespeicherten Daten holen
+				{
+					fontSize: '8px',
+					fontFamily: 'Arial',
+					color: '#ffffff',
+					padding: { left: 5, right: 5, top: 2, bottom: 2 },
+					align: 'center',
+				}
+			)
+			.setOrigin(0.5)
+			.setDepth(10);
 
 		// Actionzone erstellen
 		this.actionzoneOffset = { x: 10, y: 10 }; // Offset für die actionzone relativ zum Spieler
@@ -197,6 +236,10 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	update() {
+		if (this.playerNameText && this.player) {
+			this.playerNameText.setPosition(this.player.x, this.player.y - 30);
+		}
+
 		// Spielerbewegung
 		const velocity = this.inputManager!.handlePlayerMovement();
 		const direction: Direction = this.inputManager!.getDirection(); // Verwende getDirection aus InputManager

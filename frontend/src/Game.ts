@@ -3,14 +3,13 @@ import PlayerSelectionScene from './scenes/PlayerSelectionScene.js';
 import GameScene from './scenes/GameScene.js';
 import UIScene from './scenes/UIScene.js';
 import IsoMapScene from './scenes/IsoMapScene.js';
-
+import SocketManager from './SocketManager.ts';
 //import { Phaser } from 'phaser';
 import { io } from 'socket.io-client'; // Verwende diese Variante, falls es zu Problemen kommt
 import type { Types } from 'phaser';
 import { Game, AUTO, Scale } from 'phaser';
 
-// Hier kannst du direkt den globalen `io`-Namespace von Socket.IO verwenden
-const socket = io('http://localhost:3001', { withCredentials: true }); // Verbinde mit dem Server
+const socket = SocketManager.getSocket();
 
 // Phaser.js-Konfiguration
 const config: Types.Core.GameConfig = {

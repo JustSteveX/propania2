@@ -1,20 +1,17 @@
-import type { Socket } from 'socket.io-client';
-import io from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 
 class SocketManager {
-	private socket: Socket;
+	private static socket: Socket | null = null;
 
-	constructor() {
-		this.socket = io();
-	}
-
-	sendPlayerMove(data: unknown) {
-		this.socket.emit('playerMove', data);
-	}
-
-	onPlayerMoved(callback: () => unknown) {
-		this.socket.on('playerMoved', callback);
+	// Singleton-Muster, um sicherzustellen, dass es nur eine Socket-Verbindung gibt
+	public static getSocket(): Socket {
+		if (!this.socket) {
+			this.socket = io('http://localhost:3001', {
+				withCredentials: true, // Falls Cookies oder Sitzungsdaten verwendet werden
+			});
+		}
+		return this.socket;
 	}
 }
 
-export default new SocketManager();
+export default SocketManager;

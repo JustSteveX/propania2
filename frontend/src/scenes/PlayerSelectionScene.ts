@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Socket } from 'socket.io-client';
-import { io } from 'socket.io-client';
 import { Player } from '../types/players.type.ts';
+import SocketManager from '../SocketManager.ts';
 
 export default class PlayerSelectionScene extends Phaser.Scene {
 	private socket: Socket;
@@ -15,7 +15,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 	constructor() {
 		super({ key: 'PlayerSelectionScene' });
-		this.socket = io('http://localhost:3001');
+		this.socket = SocketManager.getSocket();
 	}
 
 	init() {
@@ -106,7 +106,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 		// Rückmeldungstext initialisieren
 		this.feedbacktext = document.createElement('div');
 		this.feedbacktext.style.left = `${centerX - inputWidth / 2 + 30}px`;
-		this.feedbacktext.style.top = `${centerY - inputHeight / 2 - (inputHeight + gap - 150)}px`;
+		this.feedbacktext.style.top = `${centerY - inputHeight / 2 - (inputHeight + gap - 160)}px`;
 		this.feedbacktext.innerText = '';
 		this.feedbacktext.style.position = 'absolute';
 
@@ -187,7 +187,15 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 			this.feedbacktext.innerHTML = 'Please select a player!';
 			return;
 		}
-		this.scene.start('GameScene', { player: this.selectedPlayer });
+
+		const socketId = this.socket.id;
+		this.socket.emit('login', { ...this.selectedPlayer, socketId });
+
+		// Spieler-Login mit der socketId
+		this.feedbacktext.style.display = 'none';
+		this.scene.start('GameScene', {
+			playerdata: { ...this.selectedPlayer, socketId },
+		});
 	}
 
 	handleLogout() {
@@ -231,29 +239,54 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 		const centerX = this.scale.width / 2;
 		const centerY = this.scale.height / 2;
 		let counter = 0;
+
 		console.log(this.playerList);
+
+		const textWidth = 200; // Einheitliche Breite für alle Texte
+		const textHeight = 30; // Einheitliche Höhe für bessere Lesbarkeit
 
 		this.playerList.forEach((player, index) => {
 			const playerText = this.add
 				.text(
 					centerX,
 					centerY + counter,
-					player.name + ' LvL ' + player.level,
+					`${player.name} LvL ${player.level}`,
 					{
 						fontSize: '18px',
 						color: '#000000',
 						fontStyle: 'bold',
+						backgroundColor: '#ffffff',
+						padding: { left: 10, right: 10, top: 5, bottom: 5 },
+						align: 'center', // Text zentrieren
 					}
 				)
 				.setOrigin(0.5)
+				.setFixedSize(textWidth, textHeight) // Einheitliche Größe
 				.setInteractive();
 
+			// Outline-Effekt hinzufügen
+			playerText.setShadow(2, 2, '#000', 2, true, true);
+
 			playerText.on('pointerdown', () => {
+				// Setze alle Texte auf Standard zurück
+				this.children.list.forEach((child) => {
+					if (child instanceof Phaser.GameObjects.Text) {
+						child.setBackgroundColor('#ffffff');
+						child.setScale(1); // Zurück auf Standardgröße
+						child.setShadow(2, 2, '#000', 2, true, true); // Standard Schatten
+					}
+				});
+
+				// Neuer Effekt für den ausgewählten Spieler
+				playerText.setBackgroundColor('#FFD700'); // Gold als Highlight
+				playerText.setScale(1.1); // Leicht vergrößern
+				playerText.setShadow(5, 5, '#FF4500', 5, true, true); // Orangefarbener Glow-Effekt
+
 				this.selectedPlayer = player;
 				this.feedbacktext.innerHTML = `Selected: ${player.name}`;
 			});
 
-			counter += 30;
+			counter += 40;
 		});
 	}
 }
