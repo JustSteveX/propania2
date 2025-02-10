@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
+import { Player } from '../types/players.type.ts';
 
 export default class PlayerSelectionScene extends Phaser.Scene {
 	private socket: Socket;
@@ -9,6 +10,8 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	private playernametext!: HTMLElement;
 	private playernameInput!: HTMLInputElement;
 	private feedbacktext!: HTMLElement;
+	private playerList: Player[] = [];
+	private selectedPlayer: Player | null = null;
 
 	constructor() {
 		super({ key: 'PlayerSelectionScene' });
@@ -82,6 +85,8 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 		this.playernameInput.style.fontSize = '16px';
 		this.playernameInput.style.zIndex = '10';
 		document.body.appendChild(this.playernameInput);
+
+		this.loadPlayers();
 
 		const createbutton = this.add
 			.image(centerX, centerY - 50, 'createbutton')
@@ -178,7 +183,11 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	}
 
 	handleLogin() {
-		this.scene.start('GameScene');
+		if (!this.selectedPlayer) {
+			this.feedbacktext.innerHTML = 'Please select a player!';
+			return;
+		}
+		this.scene.start('GameScene', { player: this.selectedPlayer });
 	}
 
 	handleLogout() {
@@ -194,5 +203,57 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	deactivateInputs() {
 		this.playernametext.style.display = 'none';
 		this.playernameInput.style.display = 'none';
+	}
+
+	loadPlayers() {
+		const token = localStorage.getItem('token');
+
+		fetch('http://localhost:3001/players/loadplayers', {
+			method: 'GET',
+			headers: { Authorization: `Bearer ${token}` },
+		})
+			.then((response) => response.json())
+			.then((players) => {
+				if (players.length === 0) {
+					this.feedbacktext.innerHTML = 'No players found.';
+					return;
+				}
+				this.playerList = players;
+				this.displayPlayers();
+			})
+			.catch((error) => {
+				console.error('Error loading players:', error);
+				this.feedbacktext.innerHTML = 'Failed to load players.';
+			});
+	}
+
+	displayPlayers() {
+		const centerX = this.scale.width / 2;
+		const centerY = this.scale.height / 2;
+		let counter = 0;
+		console.log(this.playerList);
+
+		this.playerList.forEach((player, index) => {
+			const playerText = this.add
+				.text(
+					centerX,
+					centerY + counter,
+					player.name + ' LvL ' + player.level,
+					{
+						fontSize: '18px',
+						color: '#000000',
+						fontStyle: 'bold',
+					}
+				)
+				.setOrigin(0.5)
+				.setInteractive();
+
+			playerText.on('pointerdown', () => {
+				this.selectedPlayer = player;
+				this.feedbacktext.innerHTML = `Selected: ${player.name}`;
+			});
+
+			counter += 30;
+		});
 	}
 }
