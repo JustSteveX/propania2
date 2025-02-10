@@ -29,6 +29,11 @@ export default class GameScene extends Phaser.Scene {
 		super({ key: 'GameScene' });
 	}
 
+	init() {
+		this.scene.get('PlayerSelectionScene').events.emit('deactivateInputs');
+		this.scene.sleep('PlayerSelectionScene');
+	}
+
 	preload() {
 		// Assets laden
 		this.load.tilemapTiledJSON('map', 'assets/map/maps/map.json');

@@ -28,6 +28,9 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	}
 
 	create() {
+		// Events
+		this.events.on('deactivateInputs', this.deactivateInputs, this);
+
 		// Sounds
 
 		this.clickSound = this.sound.add('clickSound');
@@ -186,5 +189,10 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 	handleClickSound() {
 		this.clickSound.play();
+	}
+
+	deactivateInputs() {
+		this.playernametext.style.display = 'none';
+		this.playernameInput.style.display = 'none';
 	}
 }
