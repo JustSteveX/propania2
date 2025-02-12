@@ -1,4 +1,6 @@
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
+import type { Player } from './types/players.type';
 
 class SocketManager {
 	private static socket: Socket | null = null;
@@ -11,6 +13,14 @@ class SocketManager {
 			});
 		}
 		return this.socket;
+	}
+
+	// 🎯 Spieler-Updates empfangen
+	public static onPlayerUpdate(callback: (players: Player[]) => void): void {
+		if (!this.socket) {
+			this.getSocket();
+		}
+		this.socket!.on('updatePlayers', callback);
 	}
 }
 

@@ -4,7 +4,7 @@ import AnimationManager from '../animations/AnimationManager.js';
 import Phaser from 'phaser';
 import type { Vector2D } from '../types/direction.enum.ts';
 import { Direction } from '../types/direction.enum.ts';
-import { Player } from '../types/players.type.ts';
+import type { Player } from '../types/players.type.ts';
 import SocketManager from '../SocketManager.ts';
 import type { Socket } from 'socket.io-client';
 
@@ -77,7 +77,6 @@ export default class GameScene extends Phaser.Scene {
 	create() {
 		// Spieler erstellen
 		this.player = this.physics.add
-			// -200 = ?, 900 = ?, 'player' = frameKey, 26 = idleIndex
 			.sprite(
 				this.playerData.positionX,
 				this.playerData.positionY,
@@ -126,13 +125,11 @@ export default class GameScene extends Phaser.Scene {
 		);
 
 		this.physics.add.existing(this.actionzone, false); // **Dynamisch statt statisch**
-		//this.actionzone?.body?.setImmovable(true); // Kann nicht von anderen Objekten verschoben werden
 		this.actionzone.setDepth(11);
 		this.spriteObjects.push(this.player!);
 
 		this.blueRectangle = this.add.rectangle(-150, 900, 20, 20, 0x0000ff, 0.5);
 		this.physics.add.existing(this.blueRectangle, true);
-		// this.blueRectangle.body.setImmovable(true);
 		this.blueRectangle.setDepth(10);
 
 		this.physics.add.collider(this.player, this.blueRectangle);
@@ -156,10 +153,9 @@ export default class GameScene extends Phaser.Scene {
 				.sprite(x, y, 'tree')
 				.setDepth(9)
 				.setScale(0.5);
-			// Passe die Kollisionsbox an den Baumstumpf an
-			const stumpHeight = 20; // Höhe des Baumstumpfs (anpassen je nach Sprite)
-			const stumpWidth = tree.width * 0.15; // Breite des Baumstumpfs (anpassen)
-			tree.setSize(stumpWidth, stumpHeight); // Kollisionsbox verkleinern
+			const stumpHeight = 20;
+			const stumpWidth = tree.width * 0.15;
+			tree.setSize(stumpWidth, stumpHeight);
 			tree.setOffset(
 				(tree.width - stumpWidth) / 2,
 				tree.height - stumpHeight - 30
@@ -222,7 +218,7 @@ export default class GameScene extends Phaser.Scene {
 				) {
 					(tree as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setAlpha(
 						1
-					); // Baum wird wieder sichtbar, wenn der Spieler nicht mehr überlappt
+					);
 				}
 			});
 		});
@@ -233,6 +229,79 @@ export default class GameScene extends Phaser.Scene {
 
 		// Animationen
 		this.animationManager = new AnimationManager(this, this.player);
+
+		// Spieler-Updates empfangen
+		this.socket.on('playerJoined', (playerData: Player) => {
+			this.addOtherPlayer(playerData);
+		});
+
+		this.socket.on('playerLeft', (playerData: Player) => {
+			this.removeOtherPlayer(playerData);
+		});
+
+		this.socket.on('playerUpdated', (playerData: Player) => {
+			this.updateOtherPlayer(playerData);
+		});
+
+		this.socket.on('currentPlayers', (players: Player[]) => {
+			players.forEach((playerData: Player) => {
+				if (playerData.id !== this.playerData.id) {
+					this.addOtherPlayer(playerData);
+				}
+			});
+		});
+	}
+
+	addOtherPlayer(playerData: Player) {
+		const otherPlayer = this.physics.add
+			.sprite(playerData.positionX, playerData.positionY, 'player')
+			.setOrigin(0.5, 0.5)
+			.setScale(0.5);
+		otherPlayer.setData('id', playerData.id);
+		this.spriteObjects.push(otherPlayer);
+
+		// Spielername über dem Kopf anzeigen
+		const playerNameText = this.add
+			.text(otherPlayer.x, otherPlayer.y - 30, playerData.name, {
+				fontSize: '8px',
+				fontFamily: 'Arial',
+				color: '#ffffff',
+				padding: { left: 5, right: 5, top: 2, bottom: 2 },
+				align: 'center',
+			})
+			.setOrigin(0.5)
+			.setDepth(10);
+
+		otherPlayer.setData('nameText', playerNameText);
+	}
+
+	removeOtherPlayer(playerData: Player) {
+		const otherPlayer = this.spriteObjects.find(
+			(p) => p.getData('id') === playerData.id
+		);
+		if (otherPlayer) {
+			otherPlayer.destroy();
+			const nameText = otherPlayer.getData('nameText');
+			if (nameText) {
+				nameText.destroy();
+			}
+			this.spriteObjects = this.spriteObjects.filter(
+				(p) => p.getData('id') !== playerData.id
+			);
+		}
+	}
+
+	updateOtherPlayer(playerData: Player) {
+		const otherPlayer = this.spriteObjects.find(
+			(p) => p.getData('id') === playerData.id
+		);
+		if (otherPlayer) {
+			otherPlayer.setPosition(playerData.positionX, playerData.positionY);
+			const nameText = otherPlayer.getData('nameText');
+			if (nameText) {
+				nameText.setPosition(otherPlayer.x, otherPlayer.y - 30);
+			}
+		}
 	}
 
 	update() {
@@ -242,11 +311,21 @@ export default class GameScene extends Phaser.Scene {
 
 		// Spielerbewegung
 		const velocity = this.inputManager!.handlePlayerMovement();
-		const direction: Direction = this.inputManager!.getDirection(); // Verwende getDirection aus InputManager
+		const direction: Direction = this.inputManager!.getDirection();
 		this.animationManager!.playAnimation(direction, velocity);
 
 		// Kamera aktualisieren
 		this.cameraControl!.update();
+
+		// Spielerdaten aktualisieren
+		this.playerData.positionX = this.player!.x;
+		this.playerData.positionY = this.player!.y;
+		this.playerData.velocityX = this.player!.body.velocity.x;
+		this.playerData.velocityY = this.player!.body.velocity.y;
+		this.playerData.direction = direction;
+
+		// Spielerdaten an den Server senden
+		this.socket.emit('updatePlayer', this.playerData);
 
 		// Spielerdaten an UIScene senden
 		this.scene
@@ -294,7 +373,6 @@ export default class GameScene extends Phaser.Scene {
 			: actionzone.setDepth(11);
 	}
 
-	// Diese Methode wird aufgerufen, wenn die Actionzone mit einem Baum kollidiert
 	handleActionzoneCollision(
 		zone:
 			| Phaser.Types.Physics.Arcade.GameObjectWithBody
@@ -306,14 +384,12 @@ export default class GameScene extends Phaser.Scene {
 			| Phaser.Tilemaps.Tile
 	): void {
 		console.log('Zone hat einen Baum berührt!');
-		(tree as Phaser.Tilemaps.Tile).setAlpha(0.5); // Setzt den Baum transparent, wenn er berührt wird
+		(tree as Phaser.Tilemaps.Tile).setAlpha(0.5);
 	}
 
-	// Überprüft, ob der Spieler mit einem Baum überlappt
 	isPlayerOverlappingTree(
 		tree: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 	): boolean {
-		// Verwende die Bounding-Box des Spielers und des Baumes
 		const playerBounds = new Phaser.Geom.Rectangle(
 			this.player!.x - this.player!.width / 2,
 			this.player!.y - this.player!.height / 2,
