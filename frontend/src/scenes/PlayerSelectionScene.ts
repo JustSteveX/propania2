@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { Socket } from 'socket.io-client';
-import { Player } from '../types/players.type.ts';
+import type { Player } from '../types/players.type.ts';
 import SocketManager from '../SocketManager.ts';
 
 export default class PlayerSelectionScene extends Phaser.Scene {
@@ -162,6 +162,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 		})
 			.then(async (response) => {
 				const text = await response.text();
+				this.loadPlayers();
 
 				try {
 					const data = JSON.parse(text);

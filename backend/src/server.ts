@@ -1,58 +1,33 @@
 import express from 'express';
 import cors from 'cors';
-import { Server } from 'socket.io';
 import http from 'http';
 import authRoutes from './routes/auth.js';
 import playersRoutes from './routes/players.js';
 import protectedRoutes from './routes/protected.js';
-import { Player } from './types/player.type.js';
+import SocketManager from './SocketManager.js';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-	cors: {
-		origin: 'http://localhost:8080', // Deine Frontend-URL
-		methods: ['GET', 'POST'],
-		credentials: true, // Wenn du Cookies oder Sitzungsdaten verwenden willst
-	},
-});
 
 const PORT = process.env.PORT || 3001;
 
-// CORS-Konfiguration für REST API
 const corsOptions = {
-	origin: 'http://localhost:8080', // Frontend-URL
+	origin: 'http://localhost:8080',
 	methods: ['GET', 'POST'],
 	allowedHeaders: ['Content-Type', 'Authorization'],
-	credentials: true, // Damit Cookies gesendet werden können
+	credentials: true,
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Routen
-app.use('/auth', authRoutes); // Authentifizierungs Routen
-app.use('/players', playersRoutes); // Spieler Routen
-app.use('/protected', protectedRoutes); // Geschützte Routen
+app.use('/auth', authRoutes);
+app.use('/players', playersRoutes);
+app.use('/protected', protectedRoutes);
 
-let players: Player[] = [];
+// Initialisiere den SocketManager
+SocketManager.initialize(server);
 
-// Socket.IO Verbindungslogik
-io.on('connection', (socket) => {
-	console.log('Ein Benutzer ist verbunden');
-
-	socket.on('login', (playerdata) => {
-		players.push({ ...playerdata, socketId: socket.id });
-		console.log('Spielerdaten:', players);
-	});
-	socket.on('disconnect', () => {
-		players = players.filter((player) => player.socketId !== socket.id);
-		console.log(players);
-		console.log('Client disconnected: ' + socket.id);
-	});
-});
-
-// Server starten
 server.listen(PORT, () => {
 	console.log(`Server läuft auf http://localhost:${PORT}`);
 });
