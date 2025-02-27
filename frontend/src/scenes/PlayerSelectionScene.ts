@@ -189,13 +189,9 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 			return;
 		}
 
-		const socketId = this.socket.id;
-		this.socket.emit('login', { ...this.selectedPlayer, socketId });
-
-		// Spieler-Login mit der socketId
 		this.feedbacktext.style.display = 'none';
 		this.scene.start('GameScene', {
-			playerdata: { ...this.selectedPlayer, socketId },
+			playerdata: { ...this.selectedPlayer, id: this.socket.id },
 		});
 	}
 
@@ -240,8 +236,6 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 		const centerX = this.scale.width / 2;
 		const centerY = this.scale.height / 2;
 		let counter = 0;
-
-		console.log(this.playerList);
 
 		const textWidth = 200; // Einheitliche Breite für alle Texte
 		const textHeight = 30; // Einheitliche Höhe für bessere Lesbarkeit

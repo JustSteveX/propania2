@@ -1,6 +1,7 @@
 import type { Direction } from './direction.enum.ts'; //
 
 export type Player = {
+	socket_id?: string;
 	id?: number;
 	account_id: number;
 	name: string;
@@ -9,7 +10,7 @@ export type Player = {
 	level: number;
 	positionX: number;
 	positionY: number;
-	direction: Direction;
 	velocityX: number;
 	velocityY: number;
+	direction: Direction;
 };

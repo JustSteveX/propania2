@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Direction } from '../types/direction.enum';
 import type { Socket } from 'socket.io-client';
 import SocketManager from '../SocketManager.ts';
-import { Player } from 'src/types/players.type.ts';
+import type { Player } from 'src/types/players.type.ts';
 
 export default class UIScene extends Phaser.Scene {
 	private playerLvL?: Phaser.GameObjects.Text;
@@ -27,15 +27,12 @@ export default class UIScene extends Phaser.Scene {
 	init(data: { playerData?: Player }) {
 		if (data.playerData) {
 			this.playerData = data.playerData;
-			console.log('Player received in UIScene:', this.playerData);
-		} else {
-			console.warn('No player data received in UIScene!');
 		}
 	}
 
 	create() {
 		this.playerLvL = this.add
-			.text(10, 30, 'LvL:' + this.playerData.level, {
+			.text(10, 30, `LvL:${this.playerData.level}`, {
 				fontSize: '18px',
 				color: '#000000',
 				backgroundColor: '#FFD700',
@@ -44,7 +41,7 @@ export default class UIScene extends Phaser.Scene {
 			.setShadow(5, 5, '#FF4500', 5, true, true);
 
 		(this.playerExp = this.add
-			.text(20, 30, 'EXP:' + this.playerData.exp, {
+			.text(20, 30, `EXP:${this.playerData.exp}`, {
 				fontSize: '18px',
 				color: '#000000',
 				backgroundColor: '#FFD700',
@@ -56,7 +53,7 @@ export default class UIScene extends Phaser.Scene {
 		);
 
 		(this.playerMoney = this.add
-			.text(10, 30, this.playerData.money + 'G', {
+			.text(10, 30, `${this.playerData.money}G`, {
 				fontSize: '18px',
 				color: '#000000',
 				backgroundColor: '#FFD700',
