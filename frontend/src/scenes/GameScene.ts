@@ -32,8 +32,6 @@ export default class GameScene extends Phaser.Scene {
 		this.scene.get('PlayerSelectionScene').events.emit('deactivateInputs');
 		this.scene.sleep('PlayerSelectionScene');
 		this.scene.launch('UIScene', { playerData: this.playerData });
-		// Entferne ggf. den "test"-Emit, falls nicht benötigt
-		// this.socket.emit('test');
 	}
 
 	preload() {
@@ -74,7 +72,6 @@ export default class GameScene extends Phaser.Scene {
 		});
 
 		this.socket.on('newPlayer', (data) => {
-			// Annahme: Das neue Spieler-Objekt enthält die Eigenschaft "socket_id"
 			this.addPlayer(this, data.socket_id, data);
 		});
 
@@ -82,6 +79,10 @@ export default class GameScene extends Phaser.Scene {
 			// data.id entspricht der Socket-ID des bewegten Spielers
 			if (this.players[data.id]) {
 				this.updatePlayer(this.players[data.id], data);
+				// Falls der Server den animationKey mitgesendet hat, Animation aktualisieren
+				if (data.animationKey) {
+					this.players[data.id].anims.play(data.animationKey, true);
+				}
 			}
 		});
 
@@ -105,7 +106,7 @@ export default class GameScene extends Phaser.Scene {
 		)!;
 		this.obstaclesLayer.setCollisionByExclusion([-1]);
 
-		// Falls der lokale Spieler schon existiert, initialisiere Steuerung
+		// Falls der lokale Spieler schon existiert, initialisiere Steuerung und Animationen
 		if (this.player) {
 			this.cameraControl = new CameraControl(this, this.player);
 			this.inputManager = new InputManager(
@@ -130,7 +131,11 @@ export default class GameScene extends Phaser.Scene {
 		// Spielerbewegung
 		const velocity = this.inputManager.handlePlayerMovement();
 		const direction: Direction = this.inputManager.getDirection();
-		this.animationManager.playAnimation(direction, velocity);
+		// Ermittelt den aktuellen Animations-Key (z. B. 'walk_up', 'idle_right', etc.)
+		const currentAnimKey = this.animationManager.playAnimation(
+			direction,
+			velocity
+		);
 
 		// Kamera aktualisieren
 		this.cameraControl.update();
@@ -141,9 +146,11 @@ export default class GameScene extends Phaser.Scene {
 		this.playerData.velocityX = this.player.body.velocity.x;
 		this.playerData.velocityY = this.player.body.velocity.y;
 		this.playerData.direction = direction;
-
-		// Spielerdaten an den Server senden
-		this.socket.emit('playerMovement', this.playerData);
+		// Sende die Spielerdaten inkl. currentAnimKey an den Server
+		this.socket.emit('playerMovement', {
+			...this.playerData,
+			animationKey: currentAnimKey,
+		});
 		this.scene
 			.get('UIScene')
 			.events.emit('updatePlayerPosition', this.player.x, this.player.y);
@@ -161,7 +168,6 @@ export default class GameScene extends Phaser.Scene {
 		if (data.socket_id === this.socket.id) {
 			this.player =
 				newPlayer as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-			// Steuerung sofort initialisieren
 			this.cameraControl = new CameraControl(this, this.player);
 			this.inputManager = new InputManager(
 				this,
@@ -182,7 +188,12 @@ export default class GameScene extends Phaser.Scene {
 		newPlayer.setOrigin(0.5, 1);
 		this.physics.world.enable(newPlayer);
 
-		// Spieler zur Liste hinzufügen (als Objekt mit der Socket-ID als Schlüssel)
+		// Für Remote-Spieler eine Standardanimation starten
+		if (data.socket_id !== this.socket.id) {
+			newPlayer.anims.play('idle_down', true);
+		}
+
+		// Spieler zur Liste hinzufügen (Schlüssel ist die Socket-ID)
 		this.players[id] = newPlayer;
 	}
 

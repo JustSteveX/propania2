@@ -24,26 +24,21 @@ class SocketManager {
 
 	private static registerEvents(socket: Socket) {
 		socket.on('login', (playerData: Player) => {
-			// Nutze socket.id, um sicherzustellen, dass die ID korrekt ist
 			const newPlayer = { ...playerData, socket_id: socket.id };
-			this.players[socket.id] = { ...playerData, socket_id: socket.id };
+			this.players[socket.id] = newPlayer;
 
-			// Debug-Ausgaben:
 			console.log('👤 Spieler hinzugefügt:', newPlayer);
 			console.log('📋 Aktuelle Spieler:', this.players);
 
-			// Sende alle aktuellen Spieler an den neu verbundenen Client
+			// Sende allen Clients die aktuellen Spieler
 			socket.emit('currentPlayers', this.players);
-
-			// Informiere alle anderen Clients über den neuen Spieler
 			socket.broadcast.emit('newPlayer', newPlayer);
 		});
 
 		socket.on('playerMovement', (data) => {
-			const player = Object.values(this.players).find(
-				(p) => p.socket_id === socket.id
-			);
+			const player = this.players[socket.id];
 			if (player) {
+				// Aktualisiere den Spieler inkl. übergebenem animationKey
 				this.players[socket.id] = { ...player, ...data };
 				socket.broadcast.emit('playerMoved', { id: socket.id, ...data });
 			}
@@ -54,10 +49,6 @@ class SocketManager {
 			delete SocketManager.players[socket.id];
 			this.io.emit('playerDisconnected', socket.id);
 		});
-	}
-
-	public static getSocket() {
-		return this.io;
 	}
 }
 
