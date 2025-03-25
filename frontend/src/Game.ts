@@ -29,7 +29,7 @@ const config: Types.Core.GameConfig = {
 				y: 0,
 				x: 0,
 			}, // Keine Schwerkraft, falls nicht benötigt
-			debug: false, // Optional: Falls du Kollisionen debuggen möchtest, kannst du
+			debug: true, // Optional: Falls du Kollisionen debuggen möchtest, kannst du
 		},
 	},
 };

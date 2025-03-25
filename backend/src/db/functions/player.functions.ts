@@ -9,3 +9,23 @@ export async function insertPlayer(playername: string, accountId: number) {
 
 	return createdPlayer;
 }
+
+export async function updatePlayer(playerData: Partial<Player>) {
+	const { money, exp, level, positionX, positionY } = playerData;
+	console.log(
+		'Updating player:',
+		playerData,
+		money,
+		exp,
+		level,
+		positionX,
+		positionY
+	);
+
+	await query(
+		'UPDATE players SET money = COALESCE(?, money), exp = COALESCE(?, exp), level = COALESCE(?, level), positionX = COALESCE(?, positionX), positionY = COALESCE(?, positionY) WHERE id = ?',
+		[money, exp, level, positionX, positionY, playerData.id]
+	);
+
+	return { playerData };
+}

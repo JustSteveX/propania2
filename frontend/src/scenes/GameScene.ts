@@ -77,11 +77,11 @@ export default class GameScene extends Phaser.Scene {
 
 		this.socket.on('playerMoved', (data) => {
 			// data.id entspricht der Socket-ID des bewegten Spielers
-			if (this.players[data.id]) {
-				this.updatePlayer(this.players[data.id], data);
+			if (this.players[data.socket_id]) {
+				this.updatePlayer(this.players[data.socket_id], data);
 				// Falls der Server den animationKey mitgesendet hat, Animation aktualisieren
 				if (data.animationKey) {
-					this.players[data.id].anims.play(data.animationKey, true);
+					this.players[data.socket_id].anims.play(data.animationKey, true);
 				}
 			}
 		});
@@ -176,7 +176,6 @@ export default class GameScene extends Phaser.Scene {
 			);
 			this.animationManager = new AnimationManager(this, this.player);
 		}
-
 		newPlayer.setOrigin(0.5, 0.5);
 		newPlayer.setScale(0.5);
 		newPlayer.setData('name', data.name);
@@ -184,6 +183,7 @@ export default class GameScene extends Phaser.Scene {
 		newPlayer.setData('exp', data.exp);
 		newPlayer.setData('level', data.level);
 		newPlayer.body.setSize(16, 16);
+		newPlayer.body.setOffset(24, 45);
 		newPlayer.setDepth(10);
 		newPlayer.setOrigin(0.5, 1);
 		this.physics.world.enable(newPlayer);
@@ -206,6 +206,32 @@ export default class GameScene extends Phaser.Scene {
 			player.setVelocityX(data.velocityX);
 			player.setVelocityY(data.velocityY);
 			player.setData('direction', data.direction);
+		}
+	}
+
+	async updateplayerData(playerData: Player) {
+		try {
+			const response = await fetch('/updateplayer', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${localStorage.getItem('token')}`,
+				},
+				body: JSON.stringify({
+					playerData,
+				}),
+			});
+
+			if (!response.ok) {
+				console.error(
+					'Fehler beim Aktualisieren des Spielers:',
+					await response.json()
+				);
+			} else {
+				console.log('Spieler erfolgreich aktualisiert.');
+			}
+		} catch (error) {
+			console.error('Fetch-Fehler:', error);
 		}
 	}
 }

@@ -4,8 +4,9 @@ import { Router } from 'express';
 import { query } from './../db/index.js';
 import type { AuthenticatedRequest } from '../middlewares/authenticateToken';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
-import { Player } from './../db/models/player.models.js';
+import type { Player } from './../db/models/player.models.js';
 import { insertPlayer } from './../db/functions/player.functions.js';
+import { updatePlayer } from './../db/functions/player.functions.js';
 
 const router = Router();
 
@@ -71,6 +72,30 @@ router.get(
 				[accountId]
 			);
 			res.status(200).json(players);
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({
+				message: error instanceof Error ? error.message : 'Unknown error',
+			});
+		}
+	}
+);
+
+router.put(
+	'/updateplayer',
+	authenticateToken,
+	async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+		if (!req.user) {
+			res.status(401).json({ message: 'Unauthorized' });
+			return;
+		}
+		const playerData = req.body.playerData;
+
+		try {
+			const updatedPlayer = await updatePlayer(playerData);
+			res
+				.status(200)
+				.json({ message: 'Player updated', player: updatedPlayer });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({

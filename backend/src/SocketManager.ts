@@ -2,6 +2,7 @@ import type { Server as HttpServer } from 'http';
 import type { Socket } from 'socket.io';
 import { Server } from 'socket.io';
 import type { Player } from './types/player.type.js';
+import { updatePlayer } from './db/functions/player.functions.js';
 
 class SocketManager {
 	private static io: Server;
@@ -40,11 +41,13 @@ class SocketManager {
 			if (player) {
 				// Aktualisiere den Spieler inkl. übergebenem animationKey
 				this.players[socket.id] = { ...player, ...data };
-				socket.broadcast.emit('playerMoved', { id: socket.id, ...data });
+				socket.broadcast.emit('playerMoved', { socket_id: socket.id, ...data });
 			}
 		});
 
 		socket.on('disconnect', () => {
+			const player = this.players[socket.id];
+			updatePlayer(player);
 			console.log('Spieler getrennt:', socket.id);
 			delete SocketManager.players[socket.id];
 			this.io.emit('playerDisconnected', socket.id);

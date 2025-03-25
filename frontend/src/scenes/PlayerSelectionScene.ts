@@ -191,7 +191,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 		this.feedbacktext.style.display = 'none';
 		this.scene.start('GameScene', {
-			playerdata: { ...this.selectedPlayer, id: this.socket.id },
+			playerdata: { ...this.selectedPlayer, id: this.selectedPlayer.id },
 		});
 	}
 
