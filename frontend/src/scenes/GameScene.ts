@@ -15,6 +15,7 @@ export default class GameScene extends Phaser.Scene {
 	private players: {
 		[id: string]: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 	} = {};
+	private playersGroup!: Phaser.Physics.Arcade.Group;
 	private groundLayer?: Phaser.Tilemaps.TilemapLayer;
 	private obstaclesLayer?: Phaser.Tilemaps.TilemapLayer;
 	private cameraControl?: CameraControl;
@@ -61,6 +62,9 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	create() {
+		// Spielergruppe initialisieren
+		this.playersGroup = this.physics.add.group();
+
 		this.socket.emit('login', { ...this.playerData, id: this.socket.id });
 
 		this.socket.on('currentPlayers', (serverPlayers) => {
@@ -88,6 +92,7 @@ export default class GameScene extends Phaser.Scene {
 
 		this.socket.on('playerDisconnected', (id) => {
 			this.players[id]?.destroy();
+			this.playersGroup?.remove(this.players[id], true, true);
 			delete this.players[id];
 		});
 
@@ -116,6 +121,8 @@ export default class GameScene extends Phaser.Scene {
 			);
 			this.animationManager = new AnimationManager(this, this.player);
 		}
+
+		this.physics.add.collider(this.playersGroup, this.playersGroup);
 	}
 
 	update() {
@@ -186,7 +193,10 @@ export default class GameScene extends Phaser.Scene {
 		newPlayer.body.setOffset(24, 45);
 		newPlayer.setDepth(10);
 		newPlayer.setOrigin(0.5, 1);
+		newPlayer.body.setAllowGravity(false);
+		newPlayer.body.setBounce(0);
 		this.physics.world.enable(newPlayer);
+		this.playersGroup.add(newPlayer);
 
 		// Für Remote-Spieler eine Standardanimation starten
 		if (data.socket_id !== this.socket.id) {

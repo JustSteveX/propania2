@@ -11,21 +11,17 @@ export async function insertPlayer(playername: string, accountId: number) {
 }
 
 export async function updatePlayer(playerData: Partial<Player>) {
-	const { money, exp, level, positionX, positionY } = playerData;
-	console.log(
-		'Updating player:',
-		playerData,
-		money,
-		exp,
-		level,
-		positionX,
-		positionY
-	);
+	if (!playerData || Object.keys(playerData).length === 0) {
+		return;
+	}
+
+	if (playerData.id === undefined) {
+		return;
+	}
+	const { money, exp, level, positionX, positionY, id } = playerData;
 
 	await query(
 		'UPDATE players SET money = COALESCE(?, money), exp = COALESCE(?, exp), level = COALESCE(?, level), positionX = COALESCE(?, positionX), positionY = COALESCE(?, positionY) WHERE id = ?',
-		[money, exp, level, positionX, positionY, playerData.id]
+		[money, exp, level, positionX, positionY, id]
 	);
-
-	return { playerData };
 }
