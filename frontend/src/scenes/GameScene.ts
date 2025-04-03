@@ -3,10 +3,11 @@ import InputManager from '../controls/InputManager.js';
 import AnimationManager from '../animations/AnimationManager.js';
 import Phaser from 'phaser';
 import type { Vector2D } from '../types/direction.enum.ts';
-import type { Direction } from '../types/direction.enum.ts';
+import { Direction } from '../types/direction.enum.ts';
 import type { Player } from '../types/players.type.ts';
 import SocketManager from '../SocketManager.ts';
 import type { Socket } from 'socket.io-client';
+import type { Item } from '../types/items.type.ts';
 
 export default class GameScene extends Phaser.Scene {
 	private player?: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -15,7 +16,10 @@ export default class GameScene extends Phaser.Scene {
 	private players: {
 		[id: string]: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 	} = {};
+	private actionzoneOffset?: Vector2D;
+	private actionzone?: Phaser.GameObjects.Rectangle;
 	private playersGroup!: Phaser.Physics.Arcade.Group;
+	private items: Item[] = [];
 	private groundLayer?: Phaser.Tilemaps.TilemapLayer;
 	private obstaclesLayer?: Phaser.Tilemaps.TilemapLayer;
 	private cameraControl?: CameraControl;
@@ -62,15 +66,20 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	create() {
+		this.socket.emit('loadItems');
+		this.socket.on('getItems', (receivedItems: Item[]) => {
+			this.items = receivedItems;
+			console.log('Items:', this.items);
+		});
 		// Spielergruppe initialisieren
 		this.playersGroup = this.physics.add.group();
 
 		this.socket.emit('login', { ...this.playerData, id: this.socket.id });
 
 		this.socket.on('currentPlayers', (serverPlayers) => {
-			console.log('Empfangene Spieler:', serverPlayers);
+			//console.log('Empfangene Spieler:', serverPlayers);
 			Object.keys(serverPlayers).forEach((id) => {
-				console.log('Spieler wird hinzugefügt:', serverPlayers[id]);
+				//console.log('Spieler wird hinzugefügt:', serverPlayers[id]);
 				this.addPlayer(this, id, serverPlayers[id]);
 			});
 		});
@@ -123,6 +132,19 @@ export default class GameScene extends Phaser.Scene {
 		}
 
 		this.physics.add.collider(this.playersGroup, this.playersGroup);
+
+		this.actionzoneOffset = { x: 10, y: 10 }; // Offset für die actionzone relativ zum Spieler
+		this.actionzone = this.add.rectangle(
+			(this.player?.x ?? 0) + (this.actionzoneOffset?.x ?? 0),
+			(this.player?.y ?? 0) + (this.actionzoneOffset?.y ?? 0),
+			10,
+			10,
+			0xff0000,
+			0.5
+		);
+
+		this.physics.add.existing(this.actionzone, false); // **Dynamisch statt statisch**
+		this.actionzone.setDepth(11);
 	}
 
 	update() {
@@ -161,6 +183,13 @@ export default class GameScene extends Phaser.Scene {
 		this.scene
 			.get('UIScene')
 			.events.emit('updatePlayerPosition', this.player.x, this.player.y);
+
+		// Actionzone mit dem Spieler bewegen
+		this.actionzone!.setPosition(
+			this.player!.x + this.actionzoneOffset!.x,
+			this.player!.y + this.actionzoneOffset!.y - 15
+		);
+		this.setActionzoneDirection(this.actionzone!, direction);
 	}
 
 	addPlayer(scene: Phaser.Scene, id: string, data: Player) {
@@ -193,8 +222,8 @@ export default class GameScene extends Phaser.Scene {
 		newPlayer.body.setOffset(24, 45);
 		newPlayer.setDepth(10);
 		newPlayer.setOrigin(0.5, 1);
-		newPlayer.body.setAllowGravity(false);
-		newPlayer.body.setBounce(0);
+		//	newPlayer.body.setAllowGravity(false);
+		//newPlayer.body.setBounce(0);
 		this.physics.world.enable(newPlayer);
 		this.playersGroup.add(newPlayer);
 
@@ -243,5 +272,29 @@ export default class GameScene extends Phaser.Scene {
 		} catch (error) {
 			console.error('Fetch-Fehler:', error);
 		}
+	}
+
+	setActionzoneDirection(
+		actionzone: Phaser.GameObjects.Rectangle,
+		direction: Direction
+	): void {
+		const offsets: {
+			left: Vector2D;
+			right: Vector2D;
+			up: Vector2D;
+			down: Vector2D;
+		} = {
+			left: { x: -10, y: 10 },
+			right: { x: 10, y: 10 },
+			up: { x: 0, y: 0 },
+			down: { x: 0, y: 20 },
+		};
+		if (!!offsets[direction]) {
+			this.actionzoneOffset = offsets[direction];
+		}
+
+		direction === Direction.UP
+			? actionzone.setDepth(8)
+			: actionzone.setDepth(11);
 	}
 }
