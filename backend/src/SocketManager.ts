@@ -3,6 +3,7 @@ import type { Socket } from 'socket.io';
 import { Server } from 'socket.io';
 import type { Player } from './types/player.type.js';
 import { updatePlayer } from './db/functions/player.functions.js';
+import { items } from './routes/items.js';
 
 class SocketManager {
 	private static io: Server;
@@ -28,8 +29,8 @@ class SocketManager {
 			const newPlayer = { ...playerData, socket_id: socket.id };
 			this.players[socket.id] = newPlayer;
 
-			console.log('👤 Spieler hinzugefügt:', newPlayer);
-			console.log('📋 Aktuelle Spieler:', this.players);
+			//console.log('👤 Spieler hinzugefügt:', newPlayer);
+			//console.log('📋 Aktuelle Spieler:', this.players);
 
 			// Sende allen Clients die aktuellen Spieler
 			socket.emit('currentPlayers', this.players);
@@ -51,6 +52,11 @@ class SocketManager {
 			console.log('Spieler getrennt:', socket.id);
 			delete SocketManager.players[socket.id];
 			this.io.emit('playerDisconnected', socket.id);
+		});
+
+		socket.on('loadItems', () => {
+			console.log('Items werden gesendet', items);
+			socket.emit('getItems', items);
 		});
 	}
 }

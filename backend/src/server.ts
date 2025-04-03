@@ -9,7 +9,7 @@ import SocketManager from './SocketManager.js';
 const app = express();
 const server = http.createServer(app);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.APP_PORT;
 
 const corsOptions = {
 	origin: 'http://localhost:8080',
