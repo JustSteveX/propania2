@@ -19,6 +19,7 @@ export default class GameScene extends Phaser.Scene {
 	private actionzoneOffset?: Vector2D;
 	private actionzone?: Phaser.GameObjects.Rectangle;
 	private playersGroup!: Phaser.Physics.Arcade.Group;
+	private interactablesGroup!: Phaser.Physics.Arcade.Group;
 	private items: Item[] = [];
 	private groundLayer?: Phaser.Tilemaps.TilemapLayer;
 	private obstaclesLayer?: Phaser.Tilemaps.TilemapLayer;
@@ -26,6 +27,7 @@ export default class GameScene extends Phaser.Scene {
 	private inputManager?: InputManager;
 	private animationManager?: AnimationManager;
 	private socket: Socket;
+	mushroom!: Phaser.Physics.Arcade.Sprite & { itemData?: Item };
 
 	constructor() {
 		super({ key: 'GameScene' });
@@ -63,14 +65,41 @@ export default class GameScene extends Phaser.Scene {
 				frameHeight: 64,
 			},
 		});
+		this.load.image({
+			key: 'mushroom',
+			url: 'assets/items/mushroom.png',
+			frameConfig: {
+				frameWidth: 512,
+				frameHeight: 15,
+			},
+		});
 	}
 
 	create() {
+		this.interactablesGroup = this.physics.add.group();
+
 		this.socket.emit('loadItems');
 		this.socket.on('getItems', (receivedItems: Item[]) => {
 			this.items = receivedItems;
 			console.log('Items:', this.items);
 		});
+
+		// Mushroom mit Daten anhängen
+		this.mushroom = this.physics.add.sprite(
+			0,
+			100,
+			'mushroom'
+		) as typeof this.mushroom;
+		this.mushroom.itemData = this.items[0]; // Beispiel: Anhängen des ersten Items
+		this.mushroom.setOrigin(0.5, 0.5);
+		this.mushroom.setScale(0.5);
+		this.mushroom.setDepth(10);
+		this.mushroom.setDisplaySize(8, 8);
+		if (this.mushroom.body) {
+			this.mushroom.body.setSize(256, 256); // Setze die Größe des Körpers
+		}
+		this.interactablesGroup.add(this.mushroom);
+
 		// Spielergruppe initialisieren
 		this.playersGroup = this.physics.add.group();
 
@@ -142,9 +171,20 @@ export default class GameScene extends Phaser.Scene {
 			0xff0000,
 			0.5
 		);
+		this.actionzone.setAlpha(0);
 
 		this.physics.add.existing(this.actionzone, false); // **Dynamisch statt statisch**
 		this.actionzone.setDepth(11);
+
+		// Physics
+
+		this.physics.add.overlap(
+			this.actionzone,
+			this.interactablesGroup,
+			() => this.pickupItem(this.actionzone!, this.mushroom),
+			undefined,
+			this
+		);
 	}
 
 	update() {
@@ -296,5 +336,17 @@ export default class GameScene extends Phaser.Scene {
 		direction === Direction.UP
 			? actionzone.setDepth(8)
 			: actionzone.setDepth(11);
+	}
+
+	pickupItem(
+		actionzone: Phaser.GameObjects.Rectangle,
+		item: Phaser.Physics.Arcade.Sprite & { itemData?: Item }
+	): void {
+		item.setAlpha(0.5);
+		if (this.inputManager?.isActionPressed()) {
+			this.socket.emit('pickupItem', item.itemData);
+			console.log('Item picked up:', item.itemData);
+			item.destroy(); // Zerstöre das Item nach dem Aufheben
+		}
 	}
 }

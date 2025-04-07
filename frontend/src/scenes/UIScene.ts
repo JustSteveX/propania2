@@ -18,6 +18,7 @@ export default class UIScene extends Phaser.Scene {
 	private joystickStick?: Phaser.GameObjects.Arc;
 	private socket: Socket;
 	private playerData!: Player;
+	private actionbutton?: Phaser.GameObjects.Sprite;
 
 	constructor() {
 		super({ key: 'UIScene' });
@@ -28,6 +29,10 @@ export default class UIScene extends Phaser.Scene {
 		if (data.playerData) {
 			this.playerData = data.playerData;
 		}
+	}
+
+	preload() {
+		this.load.image('actionbutton', 'assets/images/actionbutton.png');
 	}
 
 	create() {
@@ -159,6 +164,23 @@ export default class UIScene extends Phaser.Scene {
 		this.events.on('updatePlayerPosition', this.updatePlayerPosition, this);
 		this.events.on('updateVelocity', this.updateVelocity, this);
 		this.events.on('lastDirection', this.updatelastDirection, this);
+
+		this.actionbutton = this.add
+			.sprite(
+				this.cameras.main.width - 100,
+				this.cameras.main.height - 100,
+				'actionbutton'
+			)
+			.setInteractive()
+			.on('pointerdown', () => {
+				this.events.emit('uiAction');
+				this.actionbutton!.setScale(1.2);
+				console;
+			})
+			.on('pointerup', () => {
+				this.events.emit('uiActionreleased');
+				this.actionbutton!.setScale(1.0);
+			});
 	}
 
 	updatePlayerPosition(playerX: number, playerY: number) {

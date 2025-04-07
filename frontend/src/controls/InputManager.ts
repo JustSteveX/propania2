@@ -16,6 +16,7 @@ export default class InputManager {
 	private shiftkey?: unknown;
 	private joystickForceX?: number;
 	private joystickForceY?: number;
+	private uiActionPressed: boolean = false;
 
 	constructor(
 		scene: Phaser.Scene,
@@ -44,6 +45,13 @@ export default class InputManager {
 				this.joystickForceX = forceX;
 				this.joystickForceY = forceY;
 			});
+
+		this.scene.scene.get('UIScene').events.on('uiAction', () => {
+			this.uiActionPressed = true;
+		});
+		this.scene.scene.get('UIScene').events.on('uiActionreleased', () => {
+			this.uiActionPressed = false;
+		});
 
 		// Speichere die letzte Richtung
 		this.lastDirection = Direction.DOWN; // Initialwert
@@ -146,7 +154,22 @@ export default class InputManager {
 		return this.lastDirection!; // Zuletzt verwendete Richtung
 	}
 
+	// 4. Create a method to check if action is pressed
+	isActionPressed(): boolean {
+		const isPressed = this.keys!['E'].isDown || this.uiActionPressed;
+
+		// Reset the UI flag after checking
+		if (this.uiActionPressed) {
+			this.uiActionPressed = false;
+		}
+
+		return isPressed;
+	}
+
 	initializeKeys(): void {
+		this.keys!['E'] = this.scene!.input.keyboard!.addKey(
+			Phaser.Input.Keyboard.KeyCodes.E
+		);
 		this.keys!['W'] = this.scene!.input.keyboard!.addKey(
 			Phaser.Input.Keyboard.KeyCodes.W
 		);
