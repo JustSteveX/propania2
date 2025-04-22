@@ -54,6 +54,38 @@ export default class AnimationManager {
 				endColumn: 7,
 				frameRate: 10,
 			},
+			{
+				key: 'pickup_right',
+				row: 15,
+				startColumn: 3,
+				endColumn: 0,
+				frameRate: 5,
+				repeat: 0,
+			},
+			{
+				key: 'pickup_left',
+				row: 13,
+				startColumn: 3,
+				endColumn: 0,
+				frameRate: 5,
+				repeat: 0,
+			},
+			{
+				key: 'pickup_up',
+				row: 12,
+				startColumn: 3,
+				endColumn: 0,
+				frameRate: 5,
+				repeat: 0,
+			},
+			{
+				key: 'pickup_down',
+				row: 14,
+				startColumn: 3,
+				endColumn: 0,
+				frameRate: 5,
+				repeat: 0,
+			},
 		];
 
 		animations.forEach((anim) => {
@@ -80,12 +112,18 @@ export default class AnimationManager {
 	 * Spielt die passende Animation basierend auf der Bewegungsrichtung und Geschwindigkeit.
 	 * Gibt den aktuell gespielten Animations-Key zurück.
 	 */
-	playAnimation(direction: Direction, velocity: number[]): string {
+
+	playAnimation(
+		direction: Direction,
+		velocity: number[],
+		isActionPressed: boolean
+	): string {
 		const [velocityX, velocityY] = velocity;
 		const maxSpeed = Math.max(Math.abs(velocityX), Math.abs(velocityY));
 		let walkState: string;
-
-		if (maxSpeed === 0) {
+		if (isActionPressed) {
+			walkState = 'pickup';
+		} else if (maxSpeed === 0) {
 			walkState = 'idle';
 		} else if (maxSpeed <= 60) {
 			walkState = 'walk';

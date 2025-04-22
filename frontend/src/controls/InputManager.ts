@@ -17,6 +17,7 @@ export default class InputManager {
 	private joystickForceX?: number;
 	private joystickForceY?: number;
 	private uiActionPressed: boolean = false;
+	private Action: boolean = false;
 
 	constructor(
 		scene: Phaser.Scene,
@@ -156,14 +157,25 @@ export default class InputManager {
 
 	// 4. Create a method to check if action is pressed
 	isActionPressed(): boolean {
+		if (this.keys!['E'].isDown) {
+			this.Action = true;
+		}
+
 		const isPressed = this.keys!['E'].isDown || this.uiActionPressed;
 
 		// Reset the UI flag after checking
 		if (this.uiActionPressed) {
 			this.uiActionPressed = false;
 		}
-
 		return isPressed;
+	}
+
+	getAction(): boolean {
+		return this.Action;
+	}
+
+	setAction(action: boolean) {
+		this.Action = action;
 	}
 
 	initializeKeys(): void {

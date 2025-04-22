@@ -203,7 +203,8 @@ export default class GameScene extends Phaser.Scene {
 		// Ermittelt den aktuellen Animations-Key (z. B. 'walk_up', 'idle_right', etc.)
 		const currentAnimKey = this.animationManager.playAnimation(
 			direction,
-			velocity
+			velocity,
+			this.inputManager.getAction()
 		);
 
 		// Kamera aktualisieren
@@ -346,7 +347,12 @@ export default class GameScene extends Phaser.Scene {
 		if (this.inputManager?.isActionPressed()) {
 			this.socket.emit('pickupItem', item.itemData);
 			console.log('Item picked up:', item.itemData);
-			item.destroy(); // Zerstöre das Item nach dem Aufheben
+
+			// Cooldown für 1 Sekunde (animationssicher)
+			this.time.delayedCall(500, () => {
+				this.inputManager?.setAction(false);
+				item.destroy();
+			});
 		}
 	}
 }
