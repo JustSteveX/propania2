@@ -28,6 +28,7 @@ export default class GameScene extends Phaser.Scene {
 	private animationManager?: AnimationManager;
 	private socket: Socket;
 	mushroom!: Phaser.Physics.Arcade.Sprite & { itemData?: Item };
+	private popsound!: Phaser.Sound.BaseSound;
 
 	constructor() {
 		super({ key: 'GameScene' });
@@ -42,6 +43,9 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	preload() {
+		//Audio
+		this.load.audio('popsound', 'assets/sounds/pop.mp3');
+
 		// Assets laden
 		this.load.tilemapTiledJSON('map', 'assets/map/maps/map.json');
 		this.load.image('ground', 'assets/map/images/Ground.png');
@@ -76,6 +80,9 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	create() {
+		// Audio
+		this.popsound = this.sound.add('popsound');
+
 		this.interactablesGroup = this.physics.add.group();
 
 		this.socket.emit('loadItems');
@@ -351,6 +358,7 @@ export default class GameScene extends Phaser.Scene {
 			// Cooldown für 1 Sekunde (animationssicher)
 			this.time.delayedCall(500, () => {
 				this.inputManager?.setAction(false);
+				this.popsound.play();
 				item.destroy();
 			});
 		}

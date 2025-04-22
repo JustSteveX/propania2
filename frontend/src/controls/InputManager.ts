@@ -157,7 +157,7 @@ export default class InputManager {
 
 	// 4. Create a method to check if action is pressed
 	isActionPressed(): boolean {
-		if (this.keys!['E'].isDown) {
+		if (this.keys!['E'].isDown || this.uiActionPressed) {
 			this.Action = true;
 		}
 
