@@ -4,6 +4,8 @@ export type Item = {
 	description: string;
 	type: 'weapon' | 'armor' | 'potion' | 'misc';
 	rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	x: number;
+	y: number;
 	stats: {
 		attack?: number;
 		defense?: number;

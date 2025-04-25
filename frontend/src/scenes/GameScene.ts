@@ -10,25 +10,36 @@ import type { Socket } from 'socket.io-client';
 import type { Item } from '../types/items.type.ts';
 
 export default class GameScene extends Phaser.Scene {
+	//Setup
+	private socket: Socket;
+
+	//Player
 	private player?: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 	private playerData!: Player;
-	// Spieler werden als Objekt mit der Socket-ID als Schlüssel gespeichert
 	private players: {
 		[id: string]: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 	} = {};
+	private playersGroup!: Phaser.Physics.Arcade.Group;
 	private actionzoneOffset?: Vector2D;
 	private actionzone?: Phaser.GameObjects.Rectangle;
-	private playersGroup!: Phaser.Physics.Arcade.Group;
-	private interactablesGroup!: Phaser.Physics.Arcade.Group;
-	private items: Item[] = [];
-	private groundLayer?: Phaser.Tilemaps.TilemapLayer;
-	private obstaclesLayer?: Phaser.Tilemaps.TilemapLayer;
+
+	//Player Controls
 	private cameraControl?: CameraControl;
 	private inputManager?: InputManager;
 	private animationManager?: AnimationManager;
-	private socket: Socket;
-	mushroom!: Phaser.Physics.Arcade.Sprite & { itemData?: Item };
+
+	//Items
+	private itemsGroup!: Phaser.Physics.Arcade.Group;
+	private items: Item[] = [];
+
+	// Map and Layers
+	private groundLayer?: Phaser.Tilemaps.TilemapLayer;
+	private obstaclesLayer?: Phaser.Tilemaps.TilemapLayer;
+
+	//Sounds
 	private popsound!: Phaser.Sound.BaseSound;
+
+	//#########################################################################################################################################//
 
 	constructor() {
 		super({ key: 'GameScene' });
@@ -70,7 +81,7 @@ export default class GameScene extends Phaser.Scene {
 			},
 		});
 		this.load.image({
-			key: 'mushroom',
+			key: 'Mushroom',
 			url: 'assets/items/mushroom.png',
 			frameConfig: {
 				frameWidth: 512,
@@ -82,30 +93,29 @@ export default class GameScene extends Phaser.Scene {
 	create() {
 		// Audio
 		this.popsound = this.sound.add('popsound');
-
-		this.interactablesGroup = this.physics.add.group();
+		this.itemsGroup = this.physics.add.group();
 
 		this.socket.emit('loadItems');
 		this.socket.on('getItems', (receivedItems: Item[]) => {
 			this.items = receivedItems;
-			console.log('Items:', this.items);
+
+			this.items.forEach((item) => {
+				const itemSprite = this.itemsGroup.create(
+					item.x,
+					item.y,
+					item.name
+				) as Phaser.Physics.Arcade.Sprite & { itemData?: Item };
+				itemSprite.itemData = item;
+				itemSprite.setScale(0.5);
+				itemSprite.setDepth(10);
+				itemSprite.setDisplaySize(8, 8);
+				if (itemSprite.body) {
+					itemSprite.body.setSize(256, 256);
+				}
+			});
 		});
 
-		// Mushroom mit Daten anhängen
-		this.mushroom = this.physics.add.sprite(
-			0,
-			100,
-			'mushroom'
-		) as typeof this.mushroom;
-		this.mushroom.itemData = this.items[0]; // Beispiel: Anhängen des ersten Items
-		this.mushroom.setOrigin(0.5, 0.5);
-		this.mushroom.setScale(0.5);
-		this.mushroom.setDepth(10);
-		this.mushroom.setDisplaySize(8, 8);
-		if (this.mushroom.body) {
-			this.mushroom.body.setSize(256, 256); // Setze die Größe des Körpers
-		}
-		this.interactablesGroup.add(this.mushroom);
+		console.log('Items:', this.itemsGroup.getChildren());
 
 		// Spielergruppe initialisieren
 		this.playersGroup = this.physics.add.group();
@@ -186,9 +196,9 @@ export default class GameScene extends Phaser.Scene {
 		// Physics
 
 		this.physics.add.overlap(
-			this.actionzone,
-			this.interactablesGroup,
-			() => this.pickupItem(this.actionzone!, this.mushroom),
+			this.actionzone as Phaser.GameObjects.GameObject,
+			this.itemsGroup,
+			this.pickupItem as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
 			undefined,
 			this
 		);
@@ -347,19 +357,27 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	pickupItem(
-		actionzone: Phaser.GameObjects.Rectangle,
-		item: Phaser.Physics.Arcade.Sprite & { itemData?: Item }
+		player: Phaser.GameObjects.GameObject,
+		item: Phaser.GameObjects.GameObject
 	): void {
-		item.setAlpha(0.5);
-		if (this.inputManager?.isActionPressed()) {
-			this.socket.emit('pickupItem', item.itemData);
-			console.log('Item picked up:', item.itemData);
+		const pickedItem = item as Phaser.Physics.Arcade.Sprite & {
+			itemData?: Item;
+			alreadyPickedUp?: boolean;
+		};
 
-			// Cooldown für 1 Sekunde (animationssicher)
+		if (pickedItem.alreadyPickedUp) {
+			return;
+		}
+
+		if (this.inputManager?.isActionPressed() && pickedItem.itemData) {
+			pickedItem.alreadyPickedUp = true;
 			this.time.delayedCall(500, () => {
+				this.socket.emit('pickupItem', pickedItem.itemData);
 				this.inputManager?.setAction(false);
 				this.popsound.play();
-				item.destroy();
+				console.log('Item picked up:', pickedItem.itemData);
+				pickedItem.destroy();
+				this.inputManager?.setAction(false);
 			});
 		}
 	}

@@ -3,7 +3,10 @@ export type Item = {
 	name: string;
 	description: string;
 	type: 'weapon' | 'armor' | 'potion' | 'misc';
+	interactionType?: 'use' | 'equip' | 'drop' | 'sell' | 'trade';
 	rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	x: number;
+	y: number;
 	stats: {
 		attack?: number;
 		defense?: number;
