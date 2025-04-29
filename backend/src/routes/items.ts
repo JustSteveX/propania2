@@ -1,6 +1,8 @@
-import type { Response } from 'express';
 import { Router } from 'express';
+import { query } from './../db/index.js';
+import type { Response } from 'express';
 import type { Item } from '../types/item.type';
+import type { Inventory } from '../types/inventory.type';
 import type { AuthenticatedRequest } from '../middlewares/authenticateToken';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
 
@@ -41,7 +43,7 @@ export const items: Item[] = [
 		Ownername: '',
 	},
 	{
-		id: 1,
+		id: 2,
 		name: 'Mushroom',
 		description: 'A small brown mushroom with white spots.',
 		type: 'misc',

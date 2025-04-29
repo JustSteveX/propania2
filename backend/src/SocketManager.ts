@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import type { Player } from './types/player.type.js';
 import { updatePlayer } from './db/functions/player.functions.js';
 import { items } from './routes/items.js';
+import { insertItem } from './db/functions/item.funtions.js';
 
 class SocketManager {
 	private static io: Server;
@@ -19,7 +20,7 @@ class SocketManager {
 		});
 
 		this.io.on('connection', (socket: Socket) => {
-			console.log('Ein Benutzer ist verbunden:', socket.id);
+			//console.log('Ein Benutzer ist verbunden:', socket.id);
 			this.registerEvents(socket);
 		});
 	}
@@ -49,14 +50,41 @@ class SocketManager {
 		socket.on('disconnect', () => {
 			const player = this.players[socket.id];
 			updatePlayer(player);
-			console.log('Spieler getrennt:', socket.id);
+			//console.log('Spieler getrennt:', socket.id);
 			delete SocketManager.players[socket.id];
 			this.io.emit('playerDisconnected', socket.id);
 		});
 
 		socket.on('loadItems', () => {
-			console.log('Items werden gesendet', items);
+			//console.log('Items werden gesendet', items);
 			socket.emit('getItems', items);
+		});
+
+		socket.on('pickupItem', (data) => {
+			// data[0] = socketId
+			// data[1] = itemId
+
+			const socketId = data[0];
+			const itemId = data[1];
+
+			const index = items.findIndex((item) => item.id === itemId);
+
+			if (index !== -1) {
+				items.splice(index, 1);
+				socket.emit('getItems', items);
+
+				const player_id = this.players[socketId]?.id;
+
+				console.log(player_id, itemId, 1);
+				if (player_id !== undefined) {
+					insertItem(player_id, itemId, 1);
+					socket.broadcast.emit('destroyItem', itemId);
+				} else {
+					console.error('Player ID is undefined for socket:', socketId);
+				}
+			} else {
+				console.log('Item nicht gefunden:', itemId);
+			}
 		});
 	}
 }

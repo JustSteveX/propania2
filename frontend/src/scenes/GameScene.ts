@@ -1,13 +1,14 @@
-import CameraControl from '../controls/CameraControl.js';
-import InputManager from '../controls/InputManager.js';
-import AnimationManager from '../animations/AnimationManager.js';
 import Phaser from 'phaser';
-import type { Vector2D } from '../types/direction.enum.ts';
-import { Direction } from '../types/direction.enum.ts';
-import type { Player } from '../types/players.type.ts';
-import SocketManager from '../SocketManager.ts';
 import type { Socket } from 'socket.io-client';
-import type { Item } from '../types/items.type.ts';
+import SocketManager from '../SocketManager.ts';
+import type { Item } from '../types/item.type.ts';
+import type { Player } from '../types/players.type.ts';
+import { Direction } from '../types/direction.enum.ts';
+import InputManager from '../controls/InputManager.js';
+import type { Inventory } from 'src/types/inventory.type.ts';
+import CameraControl from '../controls/CameraControl.js';
+import type { Vector2D } from '../types/direction.enum.ts';
+import AnimationManager from '../animations/AnimationManager.js';
 
 export default class GameScene extends Phaser.Scene {
 	//Setup
@@ -22,6 +23,7 @@ export default class GameScene extends Phaser.Scene {
 	private playersGroup!: Phaser.Physics.Arcade.Group;
 	private actionzoneOffset?: Vector2D;
 	private actionzone?: Phaser.GameObjects.Rectangle;
+	private inventory: Inventory = [];
 
 	//Player Controls
 	private cameraControl?: CameraControl;
@@ -31,6 +33,7 @@ export default class GameScene extends Phaser.Scene {
 	//Items
 	private itemsGroup!: Phaser.Physics.Arcade.Group;
 	private items: Item[] = [];
+	private overlapping?: boolean;
 
 	// Map and Layers
 	private groundLayer?: Phaser.Tilemaps.TilemapLayer;
@@ -48,6 +51,7 @@ export default class GameScene extends Phaser.Scene {
 
 	init(data: { playerdata: Player }) {
 		this.playerData = data.playerdata;
+		this.playerData.socket_id = this.socket.id;
 		this.scene.get('PlayerSelectionScene').events.emit('deactivateInputs');
 		this.scene.sleep('PlayerSelectionScene');
 		this.scene.launch('UIScene', { playerData: this.playerData });
@@ -97,7 +101,9 @@ export default class GameScene extends Phaser.Scene {
 
 		this.socket.emit('loadItems');
 		this.socket.on('getItems', (receivedItems: Item[]) => {
+			this.items = [];
 			this.items = receivedItems;
+			console.log(this.items);
 
 			this.items.forEach((item) => {
 				const itemSprite = this.itemsGroup.create(
@@ -114,8 +120,17 @@ export default class GameScene extends Phaser.Scene {
 				}
 			});
 		});
-
-		console.log('Items:', this.itemsGroup.getChildren());
+		this.socket.on('destroyItem', (itemid) => {
+			this.itemsGroup.children.iterate((item) => {
+				const itemSprite = item as Phaser.Physics.Arcade.Sprite & {
+					itemData?: Item;
+				};
+				if (itemSprite.itemData?.id === itemid) {
+					itemSprite.destroy();
+				}
+				return true;
+			});
+		});
 
 		// Spielergruppe initialisieren
 		this.playersGroup = this.physics.add.group();
@@ -248,6 +263,23 @@ export default class GameScene extends Phaser.Scene {
 			this.player!.y + this.actionzoneOffset!.y - 15
 		);
 		this.setActionzoneDirection(this.actionzone!, direction);
+
+		// Items
+		this.itemsGroup.children.iterate((item) => {
+			const itemSprite = item as Phaser.Physics.Arcade.Sprite;
+
+			const isOverlapping = this.actionzone
+				? this.physics.overlap(this.actionzone, itemSprite)
+				: false;
+
+			if (isOverlapping) {
+				itemSprite.setAlpha(0.5);
+			} else {
+				itemSprite.setAlpha(1);
+			}
+
+			return true;
+		});
 	}
 
 	addPlayer(scene: Phaser.Scene, id: string, data: Player) {
@@ -365,17 +397,21 @@ export default class GameScene extends Phaser.Scene {
 			alreadyPickedUp?: boolean;
 		};
 
+		pickedItem.setAlpha(0.5);
+
 		if (pickedItem.alreadyPickedUp) {
 			return;
 		}
 
 		if (this.inputManager?.isActionPressed() && pickedItem.itemData) {
+			console.log(this.playerData.socket_id);
 			pickedItem.alreadyPickedUp = true;
 			this.time.delayedCall(500, () => {
-				this.socket.emit('pickupItem', pickedItem.itemData);
-				this.inputManager?.setAction(false);
+				this.socket.emit('pickupItem', [
+					this.playerData.socket_id,
+					pickedItem.itemData?.id,
+				]);
 				this.popsound.play();
-				console.log('Item picked up:', pickedItem.itemData);
 				pickedItem.destroy();
 				this.inputManager?.setAction(false);
 			});
