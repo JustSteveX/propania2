@@ -18,6 +18,7 @@ export default class InputManager {
 	private joystickForceY?: number;
 	private uiActionPressed: boolean = false;
 	private Action: boolean = false;
+	private invenortyOpen: boolean = false;
 
 	constructor(
 		scene: Phaser.Scene,
@@ -107,6 +108,14 @@ export default class InputManager {
 			}
 		}
 
+		// UI
+		if (Phaser.Input.Keyboard.JustDown(this.keys!['I'])) {
+			this.invenortyOpen = !this.invenortyOpen;
+			this.scene!.scene.get('UIScene').events.emit(
+				'openInventory',
+				this.invenortyOpen
+			);
+		}
 		// Spielerbewegung anwenden
 		this.player!.setVelocityX(velocityX);
 		this.player!.setVelocityY(velocityY);
@@ -196,6 +205,9 @@ export default class InputManager {
 		);
 		this.keys!['Shift'] = this.scene!.input.keyboard!.addKey(
 			Phaser.Input.Keyboard.KeyCodes.SHIFT
+		);
+		this.keys!['I'] = this.scene!.input.keyboard!.addKey(
+			Phaser.Input.Keyboard.KeyCodes.I
 		);
 	}
 }

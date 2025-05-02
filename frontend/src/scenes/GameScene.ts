@@ -6,7 +6,7 @@ import type { Player } from '../types/players.type.ts';
 import { Direction } from '../types/direction.enum.ts';
 import InputManager from '../controls/InputManager.js';
 import CameraControl from '../controls/CameraControl.js';
-import { preloadAssets } from '../assets/assetsLoader.ts';
+import { preloadAssets } from '../assets/GameSceneAssetLoader.ts';
 import type { Vector2D } from '../types/direction.enum.ts';
 import type { Inventory } from 'src/types/inventory.type.ts';
 import AnimationManager from '../animations/AnimationManager.js';
@@ -102,7 +102,6 @@ export default class GameScene extends Phaser.Scene {
 		this.socket.emit('getInventory', this.playerData.id);
 		this.socket.on('loadInventory', (inventory: Inventory[]) => {
 			this.inventory = inventory[0];
-			console.log('Inventar geladen:', this.inventory);
 		});
 
 		// Spielergruppe initialisieren

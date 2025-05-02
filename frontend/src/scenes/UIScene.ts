@@ -1,13 +1,16 @@
 import Phaser from 'phaser';
-import type { Direction } from '../types/direction.enum';
 import type { Socket } from 'socket.io-client';
 import SocketManager from '../SocketManager.ts';
 import type { Player } from 'src/types/players.type.ts';
+import { preloadUIAssets } from '../assets/UISceneAssetLoader.ts';
+import type { Direction } from '../types/direction.enum';
+import type { Inventory } from '../types/inventory.type.ts';
 
 export default class UIScene extends Phaser.Scene {
 	private playerLvL?: Phaser.GameObjects.Text;
 	private playerExp?: Phaser.GameObjects.Text;
 	private playerMoney?: Phaser.GameObjects.Text;
+	private inventory: Inventory = [];
 
 	private uiText?: Phaser.GameObjects.Text;
 	private velocityText?: Phaser.GameObjects.Text;
@@ -19,6 +22,9 @@ export default class UIScene extends Phaser.Scene {
 	private socket: Socket;
 	private playerData!: Player;
 	private actionbutton?: Phaser.GameObjects.Sprite;
+	private inventoryPanel?: Phaser.GameObjects.Graphics;
+	private inventoryOverlay?: Phaser.GameObjects.Rectangle;
+	private invetoryItemGroup?: Phaser.GameObjects.Group;
 
 	constructor() {
 		super({ key: 'UIScene' });
@@ -32,7 +38,7 @@ export default class UIScene extends Phaser.Scene {
 	}
 
 	preload() {
-		this.load.image('actionbutton', 'assets/images/actionbutton.png');
+		preloadUIAssets(this);
 	}
 
 	create() {
@@ -164,6 +170,7 @@ export default class UIScene extends Phaser.Scene {
 		this.events.on('updatePlayerPosition', this.updatePlayerPosition, this);
 		this.events.on('updateVelocity', this.updateVelocity, this);
 		this.events.on('lastDirection', this.updatelastDirection, this);
+		this.events.on('openInventory', this.openInventory, this);
 
 		this.actionbutton = this.add
 			.sprite(
@@ -181,6 +188,53 @@ export default class UIScene extends Phaser.Scene {
 				this.events.emit('uiActionreleased');
 				this.actionbutton!.setScale(1.0);
 			});
+
+		const sizeFactor = 0.8; // 0.5 = 50% des Bildschirms
+
+		const panelWidth = this.scale.width * sizeFactor;
+		const panelHeight = this.scale.height * sizeFactor;
+
+		const panelX = this.scale.width / 2 - panelWidth / 2;
+		const panelY = this.scale.height / 2 - panelHeight / 2;
+
+		// Overlay für Input-Blockierung
+		this.inventoryOverlay = this.add
+			.rectangle(
+				this.scale.width / 2,
+				this.scale.height / 2,
+				panelWidth,
+				panelHeight,
+				0x000000,
+				0
+			)
+			.setInteractive()
+			.setVisible(false)
+			.setScrollFactor(1);
+
+		this.invetoryItemGroup = this.add.group({});
+		// Panel selbst
+		this.inventoryPanel = this.add.graphics();
+		this.inventoryPanel
+			.fillStyle(0xdeb887, 0.8)
+			.fillRect(panelX, panelY, panelWidth, panelHeight)
+			.lineStyle(2, 0x000000)
+			.strokeRect(panelX, panelY, panelWidth, panelHeight)
+			.setVisible(false)
+			.setScrollFactor(1);
+
+		this.socket.on('loadInventory', (loadedInventory: Inventory[]) => {
+			this.inventory = loadedInventory[0];
+		});
+	}
+
+	openInventory(isOpen: boolean) {
+		{
+			isOpen && this.getInventory();
+			isOpen && this.loadInventoryItems(this.inventoryPanel);
+			this.inventoryOverlay?.setVisible(isOpen);
+			this.inventoryPanel!.setVisible(isOpen);
+			!isOpen && this.deleteInventoryItems();
+		}
 	}
 
 	updatePlayerPosition(playerX: number, playerY: number) {
@@ -198,5 +252,50 @@ export default class UIScene extends Phaser.Scene {
 
 	updatelastDirection(lastDirection: Direction) {
 		this.lastDirection!.setText(`lastDirection: ${lastDirection}`);
+	}
+
+	getInventory() {
+		this.socket.emit('getInventory', this.playerData.id);
+	}
+
+	loadInventoryItems(inventoryPanel: Phaser.GameObjects.Graphics | undefined) {
+		if (this.inventoryPanel) {
+			let counter = 1;
+			const heightOffset = 50; // Höhe des Panels
+			const itemHeight = 30; // Höhe jedes Items
+
+			this.inventory.forEach((item) => {
+				counter++;
+				const itemicon = this.add
+					.image(
+						this.scale.width / 2 - 500,
+						this.scale.height / 2 - 440 + counter * heightOffset,
+						'Mushroom'
+					)
+					.setOrigin(0.5, 0.5)
+					.setScale(0.1, 0.1)
+					.setScrollFactor(1)
+					.setInteractive();
+
+				const itemText = this.add.text(
+					this.scale.width / 2 + 20 - 500,
+					this.scale.height / 2 - 440 + counter * heightOffset - 10,
+					`${item.name} (${item.quantity})`,
+					{
+						fontSize: '18px',
+						color: '#000000',
+					}
+				);
+
+				this.invetoryItemGroup?.add(itemicon);
+				this.invetoryItemGroup?.add(itemText);
+			});
+		}
+	}
+
+	deleteInventoryItems() {
+		if (this.invetoryItemGroup) {
+			this.invetoryItemGroup.clear(true, true);
+		}
 	}
 }
