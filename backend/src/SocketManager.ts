@@ -1,10 +1,12 @@
-import type { Server as HttpServer } from 'http';
-import type { Socket } from 'socket.io';
 import { Server } from 'socket.io';
-import type { Player } from './types/player.type.js';
-import { updatePlayer } from './db/functions/player.functions.js';
+import type { Socket } from 'socket.io';
 import { items } from './routes/items.js';
+import { get, type Server as HttpServer } from 'http';
+import type { Player } from './types/player.type.js';
 import { insertItem } from './db/functions/item.funtions.js';
+import { updatePlayer } from './db/functions/player.functions.js';
+import { getInventoryForPlayer } from './db/functions/item.funtions.js';
+import type { Inventory } from './types/inventory.type.js';
 
 class SocketManager {
 	private static io: Server;
@@ -75,7 +77,6 @@ class SocketManager {
 
 				const player_id = this.players[socketId]?.id;
 
-				console.log(player_id, itemId, 1);
 				if (player_id !== undefined) {
 					insertItem(player_id, itemId, 1);
 					socket.broadcast.emit('destroyItem', itemId);
@@ -85,6 +86,19 @@ class SocketManager {
 			} else {
 				console.log('Item nicht gefunden:', itemId);
 			}
+		});
+
+		socket.on('getInventory', (player_id: number) => {
+			getInventoryForPlayer(player_id)
+				.then((inventory: Inventory) => {
+					socket.emit('loadInventory', [inventory]);
+				})
+				.catch((error) => {
+					console.error('Fehler beim Laden des Inventars:', error);
+					socket.emit('loadInventoryError', {
+						message: 'Inventar konnte nicht geladen werden.',
+					});
+				});
 		});
 	}
 }

@@ -2,9 +2,8 @@ export type Item = {
 	id: number;
 	name: string;
 	description: string;
-	type: 'weapon' | 'armor' | 'potion' | 'misc';
-	interactionType?: 'use' | 'equip' | 'drop' | 'sell' | 'trade';
-	rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	type: string; // 'weapon' | 'armor' | 'potion' | 'misc';
+	rarity: string; //'common' | 'rare' | 'epic' | 'legendary';
 	x: number;
 	y: number;
 	stats: {
@@ -17,11 +16,11 @@ export type Item = {
 	equipped: boolean;
 	quantity: number;
 	icon: string;
-	equippedSlot?: 'head' | 'chest' | 'legs' | 'weapon' | 'inventory';
+	equippedSlot?: string; //'head' | 'chest' | 'legs' | 'weapon' | 'inventory';
 	currentDurability?: number;
 	maxDurability?: number;
 	isDroppable?: boolean;
 	isUsable?: boolean;
-	Owner?: number | undefined;
+	Owner?: number;
 	Ownername?: string;
 };

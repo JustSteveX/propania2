@@ -1,4 +1,6 @@
-import { query } from '../index.js'; // dein DB-Modul
+import { query } from '../index.js';
+import { items } from '../../routes/items.js';
+import type { Inventory } from '../../types/inventory.type.js'; // Achte darauf, dass Item und Inventory richtig importiert sind
 
 export async function insertItem(
 	player_id: number,
@@ -20,11 +22,54 @@ export async function insertItem(
       `,
 			[player_id, item_id, quantity]
 		);
-		console.log(
-			`Item ${item_id} für Spieler ${player_id} mit Menge ${quantity} hinzugefügt/aktualisiert.`
-		);
 	} catch (err) {
 		console.error('Fehler beim Einfügen ins Inventar:', err);
+		throw err;
+	}
+}
+
+export async function getInventoryForPlayer(
+	player_id: number
+): Promise<Inventory> {
+	if (!player_id) {
+		throw new Error('player_id ist erforderlich');
+	}
+
+	try {
+		// Hole die player_inventory-Daten (item_id, quantity)
+		const inventoryRows: { item_id: number; quantity: number }[] = await query(
+			`
+      SELECT item_id, quantity
+      FROM players_inventory
+      WHERE players_id = ?
+      `,
+			[player_id]
+		);
+
+		if (inventoryRows.length === 0) {
+			return [];
+		}
+
+		const inventory: Inventory = inventoryRows
+			.map((invRow) => {
+				const itemId = Number(invRow.item_id);
+				const item = items.find((i) => i.id === itemId);
+
+				if (!item) {
+					console.warn(`Item mit ID ${itemId} nicht gefunden!`);
+					return null;
+				}
+
+				return {
+					...item,
+					quantity: invRow.quantity,
+				};
+			})
+			.filter((item) => item !== null) as Inventory;
+
+		return inventory;
+	} catch (err) {
+		console.error('Fehler beim Abrufen des Inventars:', err);
 		throw err;
 	}
 }

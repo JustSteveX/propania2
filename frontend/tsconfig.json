@@ -4,6 +4,7 @@
 		"module": "ESNext", // Für Vite und moderne Bundler
 		"moduleResolution": "Node", // Modulauflösung wie bei Node.js
 		"strict": true, // Aktiviert strikte Typüberprüfung
+		"resolveJsonModule": true,
 		"esModuleInterop": true, // Bessere Unterstützung für CommonJS-Module
 		"skipLibCheck": true, // Beschleunigt die TypeScript-Kompilierung
 		"forceConsistentCasingInFileNames": true, // Fehler bei unterschiedlicher Groß-/Kleinschreibung

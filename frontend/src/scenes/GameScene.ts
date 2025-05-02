@@ -5,9 +5,10 @@ import type { Item } from '../types/item.type.ts';
 import type { Player } from '../types/players.type.ts';
 import { Direction } from '../types/direction.enum.ts';
 import InputManager from '../controls/InputManager.js';
-import type { Inventory } from 'src/types/inventory.type.ts';
 import CameraControl from '../controls/CameraControl.js';
+import { preloadAssets } from '../assets/assetsLoader.ts';
 import type { Vector2D } from '../types/direction.enum.ts';
+import type { Inventory } from 'src/types/inventory.type.ts';
 import AnimationManager from '../animations/AnimationManager.js';
 
 export default class GameScene extends Phaser.Scene {
@@ -58,40 +59,7 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	preload() {
-		//Audio
-		this.load.audio('popsound', 'assets/sounds/pop.mp3');
-
-		// Assets laden
-		this.load.tilemapTiledJSON('map', 'assets/map/maps/map.json');
-		this.load.image('ground', 'assets/map/images/Ground.png');
-		this.load.image('treeleaves', 'assets/map/images/TreeLeaves.png');
-		this.load.image('trees', 'assets/map/images/TreeStump.png');
-		this.load.image('stone', 'assets/map/images/stone.png');
-		this.load.image('item', 'assets/images/pickaxe2.png');
-		this.load.image({
-			key: 'tree',
-			url: 'assets/images/Tree_isometric.png',
-			frameConfig: {
-				frameWidth: 360,
-				frameHeight: 360,
-			},
-		});
-		this.load.spritesheet({
-			key: 'player',
-			url: 'assets/players/Player_Template.png',
-			frameConfig: {
-				frameWidth: 64,
-				frameHeight: 64,
-			},
-		});
-		this.load.image({
-			key: 'Mushroom',
-			url: 'assets/items/mushroom.png',
-			frameConfig: {
-				frameWidth: 512,
-				frameHeight: 15,
-			},
-		});
+		preloadAssets(this);
 	}
 
 	create() {
@@ -103,7 +71,6 @@ export default class GameScene extends Phaser.Scene {
 		this.socket.on('getItems', (receivedItems: Item[]) => {
 			this.items = [];
 			this.items = receivedItems;
-			console.log(this.items);
 
 			this.items.forEach((item) => {
 				const itemSprite = this.itemsGroup.create(
@@ -130,6 +97,12 @@ export default class GameScene extends Phaser.Scene {
 				}
 				return true;
 			});
+		});
+
+		this.socket.emit('getInventory', this.playerData.id);
+		this.socket.on('loadInventory', (inventory: Inventory[]) => {
+			this.inventory = inventory[0];
+			console.log('Inventar geladen:', this.inventory);
 		});
 
 		// Spielergruppe initialisieren
@@ -404,7 +377,6 @@ export default class GameScene extends Phaser.Scene {
 		}
 
 		if (this.inputManager?.isActionPressed() && pickedItem.itemData) {
-			console.log(this.playerData.socket_id);
 			pickedItem.alreadyPickedUp = true;
 			this.time.delayedCall(500, () => {
 				this.socket.emit('pickupItem', [
