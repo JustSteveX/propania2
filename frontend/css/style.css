@@ -19,3 +19,40 @@ html {
 	margin: 0 auto;
 	/* border: 2px solid #000; /* Optional: ein Rand um den Container für mehr Sichtbarkeit */
 }
+
+#inventoryContainer {
+	width: 280px;
+	height: 350px;
+	display: flex;
+	justify-content: center; /* Horizontal zentrieren */
+	align-items: center; /* Vertikal zentrieren */
+	background-color: #deb887;
+	border-radius: 10px; /* Abgerundete Ecken */
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Schatten für Tiefe */
+	padding: 20px; /* Innenabstand */
+	flex-direction: column; /* Vertikale Anordnung der Elemente */
+	position: absolute;
+	overflow-y: auto;
+	visibility: hidden;
+}
+
+.inventoryItem {
+	width: 200px;
+	height: 50px;
+	display: flex;
+	text-align: center;
+	cursor: pointer;
+	background-color: #deb887;
+	font-size: 12px;
+	font-family: 'PerryGothic';
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+.inventoryItem img {
+	width: 20px; /* Breite des Bildes */
+	height: 20px; /* Höhe des Bildes */
+	margin-right: 5px; /* Abstand zwischen Bild und Text */
+	vertical-align: middle; /* Vertikale Ausrichtung des Bildes */
+}

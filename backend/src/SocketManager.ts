@@ -1,12 +1,13 @@
 import { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
-import { items } from './routes/items.js';
+import { allItems } from './routes/items.js';
 import { get, type Server as HttpServer } from 'http';
 import type { Player } from './types/player.type.js';
 import { insertItem } from './db/functions/item.funtions.js';
 import { updatePlayer } from './db/functions/player.functions.js';
 import { getInventoryForPlayer } from './db/functions/item.funtions.js';
 import type { Inventory } from './types/inventory.type.js';
+const worldItems = [...allItems];
 
 class SocketManager {
 	private static io: Server;
@@ -59,7 +60,7 @@ class SocketManager {
 
 		socket.on('loadItems', () => {
 			//console.log('Items werden gesendet', items);
-			socket.emit('getItems', items);
+			socket.emit('getItems', worldItems);
 		});
 
 		socket.on('pickupItem', (data) => {
@@ -69,11 +70,11 @@ class SocketManager {
 			const socketId = data[0];
 			const itemId = data[1];
 
-			const index = items.findIndex((item) => item.id === itemId);
+			const index = worldItems.findIndex((item) => item.id === itemId);
 
 			if (index !== -1) {
-				items.splice(index, 1);
-				socket.emit('getItems', items);
+				worldItems.splice(index, 1);
+				socket.emit('getItems', worldItems);
 
 				const player_id = this.players[socketId]?.id;
 
@@ -83,8 +84,6 @@ class SocketManager {
 				} else {
 					console.error('Player ID is undefined for socket:', socketId);
 				}
-			} else {
-				console.log('Item nicht gefunden:', itemId);
 			}
 		});
 

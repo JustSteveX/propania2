@@ -22,9 +22,8 @@ export default class UIScene extends Phaser.Scene {
 	private socket: Socket;
 	private playerData!: Player;
 	private actionbutton?: Phaser.GameObjects.Sprite;
-	private inventoryPanel?: Phaser.GameObjects.Graphics;
-	private inventoryOverlay?: Phaser.GameObjects.Rectangle;
-	private invetoryItemGroup?: Phaser.GameObjects.Group;
+
+	private htmlInventoryContainer?: HTMLDivElement;
 
 	constructor() {
 		super({ key: 'UIScene' });
@@ -45,6 +44,7 @@ export default class UIScene extends Phaser.Scene {
 		this.playerLvL = this.add
 			.text(10, 30, `LvL:${this.playerData.level}`, {
 				fontSize: '18px',
+				fontFamily: 'PerryGothic',
 				color: '#000000',
 				backgroundColor: '#FFD700',
 			})
@@ -54,6 +54,7 @@ export default class UIScene extends Phaser.Scene {
 		(this.playerExp = this.add
 			.text(20, 30, `EXP:${this.playerData.exp}`, {
 				fontSize: '18px',
+				fontFamily: 'PerryGothic',
 				color: '#000000',
 				backgroundColor: '#FFD700',
 			})
@@ -66,6 +67,7 @@ export default class UIScene extends Phaser.Scene {
 		(this.playerMoney = this.add
 			.text(10, 30, `${this.playerData.money}G`, {
 				fontSize: '18px',
+				fontFamily: 'PerryGothic',
 				color: '#000000',
 				backgroundColor: '#FFD700',
 			})
@@ -79,6 +81,7 @@ export default class UIScene extends Phaser.Scene {
 		this.uiText = this.add
 			.text(10, this.cameras.main.height - 30, 'Player Position: (0, 0)', {
 				fontSize: '18px',
+				fontFamily: 'PerryGothic',
 				color: '#ffffff',
 			})
 			.setScrollFactor(0);
@@ -86,6 +89,7 @@ export default class UIScene extends Phaser.Scene {
 		this.velocityText = this.add
 			.text(10, this.cameras.main.height - 200, 'Velocity: (0, 0)', {
 				fontSize: '18px',
+				fontFamily: 'PerryGothic',
 				color: '#ffffff',
 			})
 			.setScrollFactor(0);
@@ -93,6 +97,7 @@ export default class UIScene extends Phaser.Scene {
 		this.lastDirection = this.add
 			.text(10, this.cameras.main.height - 220, 'Velocity: (0, 0)', {
 				fontSize: '18px',
+				fontFamily: 'PerryGothic',
 				color: '#ffffff',
 			})
 			.setScrollFactor(0);
@@ -197,42 +202,23 @@ export default class UIScene extends Phaser.Scene {
 		const panelX = this.scale.width / 2 - panelWidth / 2;
 		const panelY = this.scale.height / 2 - panelHeight / 2;
 
-		// Overlay für Input-Blockierung
-		this.inventoryOverlay = this.add
-			.rectangle(
-				this.scale.width / 2,
-				this.scale.height / 2,
-				panelWidth,
-				panelHeight,
-				0x000000,
-				0
-			)
-			.setInteractive()
-			.setVisible(false)
-			.setScrollFactor(1);
-
-		this.invetoryItemGroup = this.add.group({});
-		// Panel selbst
-		this.inventoryPanel = this.add.graphics();
-		this.inventoryPanel
-			.fillStyle(0xdeb887, 0.8)
-			.fillRect(panelX, panelY, panelWidth, panelHeight)
-			.lineStyle(2, 0x000000)
-			.strokeRect(panelX, panelY, panelWidth, panelHeight)
-			.setVisible(false)
-			.setScrollFactor(1);
-
 		this.socket.on('loadInventory', (loadedInventory: Inventory[]) => {
 			this.inventory = loadedInventory[0];
 		});
+
+		//HTML-Elemente für das Inventar
+		this.htmlInventoryContainer = document.createElement('div');
+		this.htmlInventoryContainer.id = 'inventoryContainer';
+		document.body.appendChild(this.htmlInventoryContainer);
 	}
 
 	openInventory(isOpen: boolean) {
 		{
-			isOpen && this.getInventory();
-			isOpen && this.loadInventoryItems(this.inventoryPanel);
-			this.inventoryOverlay?.setVisible(isOpen);
-			this.inventoryPanel!.setVisible(isOpen);
+			this.getInventory();
+			this.loadInventoryItems();
+			this.htmlInventoryContainer!.style.visibility = isOpen
+				? 'visible'
+				: 'hidden';
 			!isOpen && this.deleteInventoryItems();
 		}
 	}
@@ -258,44 +244,29 @@ export default class UIScene extends Phaser.Scene {
 		this.socket.emit('getInventory', this.playerData.id);
 	}
 
-	loadInventoryItems(inventoryPanel: Phaser.GameObjects.Graphics | undefined) {
-		if (this.inventoryPanel) {
-			let counter = 1;
-			const heightOffset = 50; // Höhe des Panels
-			const itemHeight = 30; // Höhe jedes Items
+	loadInventoryItems() {
+		let counter = 1;
 
-			this.inventory.forEach((item) => {
-				counter++;
-				const itemicon = this.add
-					.image(
-						this.scale.width / 2 - 500,
-						this.scale.height / 2 - 440 + counter * heightOffset,
-						'Mushroom'
-					)
-					.setOrigin(0.5, 0.5)
-					.setScale(0.1, 0.1)
-					.setScrollFactor(1)
-					.setInteractive();
+		this.inventory.forEach((item) => {
+			counter++;
+			const itemicon = document.createElement('img');
+			itemicon.src = item.icon;
+			const itemInventory = document.createElement('div');
+			itemInventory.className = 'inventoryItem';
+			itemInventory.appendChild(itemicon);
+			document.body.appendChild(itemInventory);
+			this.htmlInventoryContainer!.appendChild(itemInventory);
 
-				const itemText = this.add.text(
-					this.scale.width / 2 + 20 - 500,
-					this.scale.height / 2 - 440 + counter * heightOffset - 10,
-					`${item.name} (${item.quantity})`,
-					{
-						fontSize: '18px',
-						color: '#000000',
-					}
-				);
-
-				this.invetoryItemGroup?.add(itemicon);
-				this.invetoryItemGroup?.add(itemText);
-			});
-		}
+			const itemText = document.createElement('p');
+			itemText.innerText = `${item.name} x${item.quantity}`;
+			itemInventory.appendChild(itemText);
+		});
 	}
 
 	deleteInventoryItems() {
-		if (this.invetoryItemGroup) {
-			this.invetoryItemGroup.clear(true, true);
+		if (this.htmlInventoryContainer) {
+			this.htmlInventoryContainer.innerHTML = '';
 		}
+		this.socket.emit('getInventory', this.playerData.id);
 	}
 }

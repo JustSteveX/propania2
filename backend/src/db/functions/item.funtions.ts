@@ -1,5 +1,5 @@
 import { query } from '../index.js';
-import { items } from '../../routes/items.js';
+import { allItems } from '../../routes/items.js';
 import type { Inventory } from '../../types/inventory.type.js'; // Achte darauf, dass Item und Inventory richtig importiert sind
 
 export async function insertItem(
@@ -53,7 +53,7 @@ export async function getInventoryForPlayer(
 		const inventory: Inventory = inventoryRows
 			.map((invRow) => {
 				const itemId = Number(invRow.item_id);
-				const item = items.find((i) => i.id === itemId);
+				const item = allItems.find((i) => i.id === itemId);
 
 				if (!item) {
 					console.warn(`Item mit ID ${itemId} nicht gefunden!`);

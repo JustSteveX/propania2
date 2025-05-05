@@ -8,7 +8,7 @@ const raw = readFileSync(
 	new URL('../data/items.json', import.meta.url),
 	'utf-8'
 );
-export const items: Item[] = JSON.parse(raw) as Item[];
+export const allItems: Item[] = JSON.parse(raw) as Item[];
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.get(
 			res.status(401).json({ message: 'Unauthorized' });
 			return;
 		}
-		res.json(items);
+		res.json(allItems);
 	}
 );
 

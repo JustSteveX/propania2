@@ -385,6 +385,7 @@ export default class GameScene extends Phaser.Scene {
 				this.popsound.play();
 				pickedItem.destroy();
 				this.inputManager?.setAction(false);
+				this.socket.emit('getInventory', this.playerData.id);
 			});
 		}
 	}
