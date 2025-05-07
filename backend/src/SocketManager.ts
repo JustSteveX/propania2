@@ -9,6 +9,10 @@ import { getInventoryForPlayer } from './db/functions/item.funtions.js';
 import type { Inventory } from './types/inventory.type.js';
 const worldItems = [...allItems];
 
+const SERVER_PORT = Number(process.env.SERVER_PORT) || 3001;
+const HOST_SERVER = process.env.HOST_SERVER;
+const CLIENT_PORT = process.env.CLIENT_PORT;
+
 class SocketManager {
 	private static io: Server;
 	private static players: { [socketId: string]: Player } = {};
@@ -16,7 +20,7 @@ class SocketManager {
 	public static initialize(server: HttpServer) {
 		this.io = new Server(server, {
 			cors: {
-				origin: 'http://localhost:8080',
+				origin: `http://${HOST_SERVER}:${CLIENT_PORT}`,
 				methods: ['GET', 'POST'],
 				credentials: true,
 			},

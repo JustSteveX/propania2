@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 import type { Socket } from 'socket.io-client';
 import type { Player } from '../types/players.type.ts';
 import SocketManager from '../SocketManager.ts';
+const HOST = import.meta.env.VITE_HOST_SERVER;
+const PORT = import.meta.env.VITE_API_PORT;
+const API_URL = `http://${HOST}:${PORT}`;
 
 export default class PlayerSelectionScene extends Phaser.Scene {
 	private socket: Socket;
@@ -12,6 +15,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	private feedbacktext!: HTMLElement;
 	private playerList: Player[] = [];
 	private selectedPlayer: Player | null = null;
+	
 
 	constructor() {
 		super({ key: 'PlayerSelectionScene' });
@@ -152,7 +156,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 			return;
 		}
 
-		fetch('http://localhost:3001/players/createplayer', {
+		fetch(`${API_URL}players/createplayer`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -213,7 +217,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	loadPlayers() {
 		const token = localStorage.getItem('token');
 
-		fetch('http://localhost:3001/players/loadplayers', {
+		fetch(`${API_URL}/players/loadplayers`, {
 			method: 'GET',
 			headers: { Authorization: `Bearer ${token}` },
 		})

@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import type { Socket } from 'socket.io-client';
 import SocketManager from '../SocketManager.ts';
+const HOST = import.meta.env.VITE_HOST_SERVER;
+const PORT = import.meta.env.VITE_API_PORT;
+const API_URL = `http://${HOST}:${PORT}`;
 
 export default class LoginScene extends Phaser.Scene {
 	private emailtext!: HTMLElement;
@@ -197,7 +200,7 @@ export default class LoginScene extends Phaser.Scene {
 			return;
 		}
 
-		fetch('http://localhost:3001/auth/register', {
+		fetch(`${API_URL}/auth/register`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -233,7 +236,7 @@ export default class LoginScene extends Phaser.Scene {
 			return;
 		}
 
-		fetch('http://localhost:3001/auth/login', {
+		fetch(`${API_URL}/auth/login`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -258,7 +261,7 @@ export default class LoginScene extends Phaser.Scene {
 	}
 
 	validateToken(token: string) {
-		fetch('http://localhost:3001/auth/validateToken', {
+		fetch(`${API_URL}/auth/validateToken`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
