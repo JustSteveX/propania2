@@ -15,7 +15,6 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	private feedbacktext!: HTMLElement;
 	private playerList: Player[] = [];
 	private selectedPlayer: Player | null = null;
-	
 
 	constructor() {
 		super({ key: 'PlayerSelectionScene' });
@@ -156,7 +155,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 			return;
 		}
 
-		fetch(`${API_URL}players/createplayer`, {
+		fetch(`${API_URL}/players/createplayer`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

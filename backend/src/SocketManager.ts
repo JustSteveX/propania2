@@ -20,7 +20,17 @@ class SocketManager {
 	public static initialize(server: HttpServer) {
 		this.io = new Server(server, {
 			cors: {
-				origin: `http://${HOST_SERVER}:${CLIENT_PORT}`,
+				//origin: `http://${HOST_SERVER}:${CLIENT_PORT}`,
+				origin: [
+					`http://localhost:${CLIENT_PORT}`,
+					`http://127.0.0.1:${CLIENT_PORT}`,
+					`http://192.168.178.89:${CLIENT_PORT}`,
+					`http://78.46.179.15:${CLIENT_PORT}`,
+					`http://cloud.propanben.de:3001`,
+					`http://cloud.propanben.de:${CLIENT_PORT}`,
+					`http://propania2.de`,
+					`http://propania2.de:${CLIENT_PORT}`,
+				],
 				methods: ['GET', 'POST'],
 				credentials: true,
 			},
