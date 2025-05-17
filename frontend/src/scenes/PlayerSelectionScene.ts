@@ -4,7 +4,8 @@ import type { Player } from '../types/players.type.ts';
 import SocketManager from '../SocketManager.ts';
 const HOST = import.meta.env.VITE_HOST_SERVER;
 const PORT = import.meta.env.VITE_API_PORT;
-const API_URL = `http://${HOST}:${PORT}`;
+const PROTOKOLL = import.meta.env.VITE_API_PROTOKOLL;
+const API_URL = `${PROTOKOLL}://${HOST}:${PORT}`;
 
 export default class PlayerSelectionScene extends Phaser.Scene {
 	private socket: Socket;

@@ -7,11 +7,11 @@ class SocketManager {
 
 	public static getSocket(): Socket {
 		if (!this.socket) {
-
 			const host = import.meta.env.VITE_HOST_SERVER;
 			const apiport = import.meta.env.VITE_API_PORT;
+			const protokoll = import.meta.env.VITE_API_PROTOKOLL;
 			console.log('🔵 Erstelle neue Socket-Verbindung...');
-			this.socket = io(`http://${host}:${apiport}`, {
+			this.socket = io(`${protokoll}://${host}:${apiport}`, {
 				withCredentials: true, // Falls Cookies oder Sitzungsdaten verwendet werden
 			});
 

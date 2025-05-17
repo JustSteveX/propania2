@@ -3,8 +3,8 @@ import type { Socket } from 'socket.io-client';
 import SocketManager from '../SocketManager.ts';
 const HOST = import.meta.env.VITE_HOST_SERVER;
 const PORT = import.meta.env.VITE_API_PORT;
-const API_URL = `http://${HOST}:${PORT}`;
-
+const PROTOKOLL = import.meta.env.VITE_API_PROTOKOLL;
+const API_URL = `${PROTOKOLL}://${HOST}:${PORT}`;
 export default class LoginScene extends Phaser.Scene {
 	private emailtext!: HTMLElement;
 	private passwordtext!: HTMLElement;
@@ -208,7 +208,9 @@ export default class LoginScene extends Phaser.Scene {
 			body: JSON.stringify({ email, password }),
 		})
 			.then((response) => {
-				if (response.ok) return response.json() as Promise<{ message: string }>;
+				if (response.ok) {
+					return response.json() as Promise<{ message: string }>;
+				}
 				return response.json().then((errorData: { message: string }) => {
 					throw new Error(errorData.message || 'Failed to register');
 				});
@@ -244,7 +246,9 @@ export default class LoginScene extends Phaser.Scene {
 			body: JSON.stringify({ email, password }),
 		})
 			.then((response) => {
-				if (response.ok) return response.json();
+				if (response.ok) {
+					return response.json();
+				}
 				throw new Error('Login failed');
 			})
 			.then((data) => {

@@ -12,6 +12,7 @@ const worldItems = [...allItems];
 const SERVER_PORT = Number(process.env.SERVER_PORT) || 3001;
 const HOST_SERVER = process.env.HOST_SERVER;
 const CLIENT_PORT = process.env.CLIENT_PORT;
+const PROTOKOLL = process.env.PROTOKOLL;
 
 class SocketManager {
 	private static io: Server;
@@ -20,16 +21,16 @@ class SocketManager {
 	public static initialize(server: HttpServer) {
 		this.io = new Server(server, {
 			cors: {
-				//origin: `http://${HOST_SERVER}:${CLIENT_PORT}`,
 				origin: [
+					`${PROTOKOLL}://localhost:${CLIENT_PORT}`,
+					`${PROTOKOLL}://127.0.0.1:${CLIENT_PORT}`,
+					`${PROTOKOLL}://192.168.178.89:${CLIENT_PORT}`,
+					`${PROTOKOLL}://78.46.179.15:${CLIENT_PORT}`,
+					`${PROTOKOLL}://cloud.propanben.de:${SERVER_PORT}`,
+					`${PROTOKOLL}://cloud.propanben.de:${CLIENT_PORT}`,
+					`${PROTOKOLL}://propania2.de`,
+					`${PROTOKOLL}://propania2.de:${CLIENT_PORT}`,
 					`http://localhost:${CLIENT_PORT}`,
-					`http://127.0.0.1:${CLIENT_PORT}`,
-					`http://192.168.178.89:${CLIENT_PORT}`,
-					`http://78.46.179.15:${CLIENT_PORT}`,
-					`http://cloud.propanben.de:3001`,
-					`http://cloud.propanben.de:${CLIENT_PORT}`,
-					`http://propania2.de`,
-					`http://propania2.de:${CLIENT_PORT}`,
 				],
 				methods: ['GET', 'POST'],
 				credentials: true,
@@ -47,8 +48,8 @@ class SocketManager {
 			const newPlayer = { ...playerData, socket_id: socket.id };
 			this.players[socket.id] = newPlayer;
 
-			//console.log('👤 Spieler hinzugefügt:', newPlayer);
-			//console.log('📋 Aktuelle Spieler:', this.players);
+			console.log('👤 Spieler hinzugefügt:', newPlayer);
+			console.log('📋 Aktuelle Spieler:', this.players);
 
 			// Sende allen Clients die aktuellen Spieler
 			socket.emit('currentPlayers', this.players);
@@ -67,13 +68,13 @@ class SocketManager {
 		socket.on('disconnect', () => {
 			const player = this.players[socket.id];
 			updatePlayer(player);
-			//console.log('Spieler getrennt:', socket.id);
+			console.log('Spieler getrennt:', socket.id);
 			delete SocketManager.players[socket.id];
 			this.io.emit('playerDisconnected', socket.id);
 		});
 
 		socket.on('loadItems', () => {
-			//console.log('Items werden gesendet', items);
+			console.log('Items werden gesendet', worldItems);
 			socket.emit('getItems', worldItems);
 		});
 
