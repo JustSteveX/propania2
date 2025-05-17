@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import https from 'https';
+import http from 'http';
 import fs from 'fs';
 import authRoutes from './routes/auth.js';
 import playersRoutes from './routes/players.js';
@@ -69,10 +70,11 @@ app.use('/protected', protectedRoutes);
 
 // HTTPS-Server mit Socket.IO initialisieren
 const httpsServer = https.createServer(sslOptions, app);
+const httpServer = http.createServer(app);
 SocketManager.initialize(httpsServer);
 
-// Server starten
-httpsServer.listen(SERVER_PORT, '0.0.0.0', () => {
+// Server starten  auf https oder http umstellen
+httpServer.listen(SERVER_PORT, '0.0.0.0', () => {
 	console.log(
 		`✅ HTTPS-Server läuft unter https://api.propania2.de:${SERVER_PORT}`
 	);
