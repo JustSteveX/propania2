@@ -1,58 +1,71 @@
 /* Sicherstellen, dass body und html den gesamten Bildschirm ausfüllen */
-body,
-html {
-	width: 100%;
-	height: 100%;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	justify-content: center; /* Horizontal zentrieren */
-	align-items: center; /* Vertikal zentrieren */
-	background-color: #87ceeb; /* Optionale Hintergrundfarbe */
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #87ceeb; /* Optionale Hintergrundfarbe */
 }
 
 /* Der Container für das Phaser-Spiel */
 #game-container {
-	display: block;
-	width: 100%;
-	height: 100%;
-	margin: 0 auto;
-	/* border: 2px solid #000; /* Optional: ein Rand um den Container für mehr Sichtbarkeit */
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center; /* Horizontal zentrieren */
+  align-items: center; /* Vertikal zentrieren */
+  position: relative;
 }
 
+/* Das Canvas-Element */
+canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container für das Inventar */
 #inventoryContainer {
-	width: 280px;
-	height: 350px;
-	display: flex;
-	justify-content: center; /* Horizontal zentrieren */
-	align-items: center; /* Vertikal zentrieren */
-	background-color: #deb887;
-	border-radius: 10px; /* Abgerundete Ecken */
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Schatten für Tiefe */
-	padding: 20px; /* Innenabstand */
-	flex-direction: column; /* Vertikale Anordnung der Elemente */
-	position: absolute;
-	overflow-y: auto;
-	visibility: hidden;
+  width: 280px;
+  height: 350px;
+  display: flex;
+  justify-content: center; /* Horizontal zentrieren */
+  align-items: center; /* Vertikal zentrieren */
+  background-color: #deb887;
+  border-radius: 10px; /* Abgerundete Ecken */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Schatten für Tiefe */
+  padding: 20px; /* Innenabstand */
+  flex-direction: column; /* Vertikale Anordnung der Elemente */
+  position: absolute;
+  overflow-y: auto;
+  visibility: hidden;
+  z-index: 1000;
 }
 
+/* Einzelne Inventar-Items */
 .inventoryItem {
-	width: 200px;
-	height: 50px;
-	display: flex;
-	text-align: center;
-	cursor: pointer;
-	background-color: #deb887;
-	font-size: 12px;
-	font-family: 'PerryGothic';
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
+  width: 200px;
+  height: 50px;
+  display: flex;
+  text-align: center;
+  cursor: pointer;
+  background-color: #deb887;
+  font-size: 12px;
+  font-family: 'PerryGothic';
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
 .inventoryItem img {
-	width: 20px; /* Breite des Bildes */
-	height: 20px; /* Höhe des Bildes */
-	margin-right: 5px; /* Abstand zwischen Bild und Text */
-	vertical-align: middle; /* Vertikale Ausrichtung des Bildes */
+  width: 20px; /* Breite des Bildes */
+  height: 20px; /* Höhe des Bildes */
+  margin-right: 5px; /* Abstand zwischen Bild und Text */
+  vertical-align: middle; /* Vertikale Ausrichtung des Bildes */
 }
