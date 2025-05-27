@@ -6,10 +6,11 @@ import type { Player } from '../types/players.type.ts';
 import { Direction } from '../types/direction.enum.ts';
 import InputManager from '../controls/InputManager.js';
 import CameraControl from '../controls/CameraControl.js';
-import { preloadAssets } from '../assets/GameSceneAssetLoader.ts';
+import TreeManager from '../gameobjects/TreeManager.ts';
 import type { Vector2D } from '../types/direction.enum.ts';
 import type { Inventory } from 'src/types/inventory.type.ts';
 import AnimationManager from '../animations/AnimationManager.js';
+import { preloadAssets } from '../assets/GameSceneAssetLoader.ts';
 
 export default class GameScene extends Phaser.Scene {
 	//Setup
@@ -36,6 +37,11 @@ export default class GameScene extends Phaser.Scene {
 	private items: Item[] = [];
 	private overlapping?: boolean;
 
+	//Objects
+	private tree?: Phaser.Physics.Arcade.Sprite;
+	private objects: Phaser.Physics.Arcade.Sprite[] = [];
+	private objectsGroup!: Phaser.Physics.Arcade.Group;
+
 	// Map and Layers
 	private groundLayer?: Phaser.Tilemaps.TilemapLayer;
 	private obstaclesLayer?: Phaser.Tilemaps.TilemapLayer;
@@ -51,10 +57,13 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	init(data: { playerdata: Player }) {
+		document.getElementById('playernametext')?.remove();
+		document.getElementById('playernameinput')?.remove();
+		document.getElementById('feedbacktext')?.remove();
+
 		this.playerData = data.playerdata;
 		this.playerData.socket_id = this.socket.id;
-		this.scene.get('PlayerSelectionScene').events.emit('deactivateInputs');
-		this.scene.sleep('PlayerSelectionScene');
+		this.scene.remove('PlayerSelectionScene');
 		this.scene.launch('UIScene', { playerData: this.playerData });
 	}
 
@@ -63,10 +72,14 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	create() {
+		// init TreeManager
+		const treeManager = new TreeManager(this);
+
 		// Audio
 		this.popsound = this.sound.add('popsound');
 		this.itemsGroup = this.physics.add.group();
 
+		// Load Items
 		this.socket.emit('loadItems');
 		this.socket.on('getItems', (receivedItems: Item[]) => {
 			this.items = [];
@@ -98,6 +111,8 @@ export default class GameScene extends Phaser.Scene {
 				return true;
 			});
 		});
+
+		// Load Invetory
 
 		this.socket.emit('getInventory', this.playerData.id);
 		this.socket.on('loadInventory', (inventory: Inventory[]) => {
@@ -153,6 +168,45 @@ export default class GameScene extends Phaser.Scene {
 		)!;
 		this.obstaclesLayer.setCollisionByExclusion([-1]);
 
+		// Create Objects
+
+		// Objekte-Gruppe initialisieren
+		this.objectsGroup = this.physics.add.group();
+
+		// Bäume erstellen
+
+		const tree = treeManager.createTree(0, 400);
+		this.objectsGroup.add(tree);
+
+		// Only add collider if actionzone is defined
+		if (this.actionzone) {
+			this.physics.add.collider(
+				this.actionzone,
+				treeManager.getTrees(),
+				(player, collidedTree) => {
+					// Tree interaction logic here
+					const dir = this.inputManager?.getDirection();
+					//if (!this.inputManager?.isActionPressed()) {
+					const anim = `treecut_${dir}`;
+					(player as Phaser.Physics.Arcade.Sprite).anims.play(anim, true);
+					console.log(
+						`Player ${this.playerData.name} is cutting a tree in direction ${dir}`
+					);
+					// Tree bounce
+					const treeSprite = collidedTree as Phaser.Physics.Arcade.Sprite;
+					this.tweens.add({
+						targets: treeSprite,
+						x: treeSprite.x + Phaser.Math.Between(-5, 5),
+						y: treeSprite.y + Phaser.Math.Between(-5, 5),
+						duration: 100,
+						yoyo: true,
+						repeat: 2,
+					});
+					//}
+				}
+			);
+		}
+
 		// Falls der lokale Spieler schon existiert, initialisiere Steuerung und Animationen
 		if (this.player) {
 			this.cameraControl = new CameraControl(this, this.player);
@@ -163,8 +217,6 @@ export default class GameScene extends Phaser.Scene {
 			);
 			this.animationManager = new AnimationManager(this, this.player);
 		}
-
-		this.physics.add.collider(this.playersGroup, this.playersGroup);
 
 		this.actionzoneOffset = { x: 10, y: 10 }; // Offset für die actionzone relativ zum Spieler
 		this.actionzone = this.add.rectangle(
@@ -179,6 +231,10 @@ export default class GameScene extends Phaser.Scene {
 
 		this.physics.add.existing(this.actionzone, false); // **Dynamisch statt statisch**
 		this.actionzone.setDepth(11);
+
+		// Collisions
+		this.physics.add.collider(this.playersGroup, this.objectsGroup);
+		this.physics.add.collider(this.playersGroup, this.playersGroup);
 
 		// Physics
 
@@ -200,6 +256,20 @@ export default class GameScene extends Phaser.Scene {
 		) {
 			return;
 		}
+
+		// Object Layers update
+
+		Object.values(this.players).forEach((playerSprite) => {
+			playerSprite.setDepth(playerSprite.body.y);
+		});
+
+		this.objectsGroup?.children.iterate((obj) => {
+			const sprite = obj as Phaser.Physics.Arcade.Sprite;
+			if (sprite.body) {
+				sprite.setDepth(sprite.body.y);
+			}
+			return true;
+		});
 
 		// Spielerbewegung
 		const velocity = this.inputManager.handlePlayerMovement();
@@ -282,7 +352,7 @@ export default class GameScene extends Phaser.Scene {
 		newPlayer.setData('level', data.level);
 		newPlayer.body.setSize(16, 16);
 		newPlayer.body.setOffset(24, 45);
-		newPlayer.setDepth(10);
+		newPlayer.setDepth(newPlayer.body.y);
 		newPlayer.setOrigin(0.5, 1);
 		//	newPlayer.body.setAllowGravity(false);
 		//newPlayer.body.setBounce(0);

@@ -6,12 +6,11 @@ export function preloadAssets(scene: Phaser.Scene): void {
 	scene.load.tilemapTiledJSON('map', 'assets/map/maps/map.json');
 	scene.load.image('ground', 'assets/map/images/Ground.png');
 	scene.load.image('treeleaves', 'assets/map/images/TreeLeaves.png');
-	scene.load.image('trees', 'assets/map/images/TreeStump.png');
 	scene.load.image('stone', 'assets/map/images/stone.png');
 	scene.load.image('item', 'assets/images/pickaxe2.png');
 	scene.load.image({
 		key: 'tree',
-		url: 'assets/images/Tree_isometric.png',
+		url: 'assets/objects/tree.png',
 		frameConfig: {
 			frameWidth: 360,
 			frameHeight: 360,

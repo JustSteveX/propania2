@@ -23,8 +23,13 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	}
 
 	init() {
-		this.scene.get('LoginScene').events.emit('deactivateInputs');
+		//this.scene.remove('LoginScene');
 		this.scene.sleep('LoginScene');
+		document.getElementById('emailtext')?.remove();
+		document.getElementById('passwordtext')?.remove();
+		document.getElementById('emailinput')?.remove();
+		document.getElementById('passwordinput')?.remove();
+		document.getElementById('feedbacktext')?.remove();
 	}
 
 	preload() {
@@ -35,9 +40,6 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 	}
 
 	create() {
-		// Events
-		this.events.on('deactivateInputs', this.deactivateInputs, this);
-
 		// Sounds
 
 		this.clickSound = this.sound.add('clickSound');
@@ -71,6 +73,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 		// E-Mail-Text erstellen und als Klassenattribute speichern
 		this.playernametext = document.createElement('div');
+		this.playernametext.id = 'playernametext';
 		this.playernametext.style.left = `${centerX - inputWidth / 2 + 50}px`;
 		this.playernametext.style.top = `${centerY - inputHeight / 2 - (inputHeight + gap) - 80}px`;
 		this.playernametext.innerText = 'Playername';
@@ -79,6 +82,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 		// E-Mail-Eingabefeld erstellen und zentrieren
 		this.playernameInput = document.createElement('input');
+		this.playernameInput.id = 'playernameinput';
 		this.playernameInput.type = 'text';
 		this.playernameInput.placeholder = 'Playername';
 		this.playernameInput.style.position = 'absolute';
@@ -109,6 +113,7 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 		// Rückmeldungstext initialisieren
 		this.feedbacktext = document.createElement('div');
+		this.feedbacktext.id = 'feedbacktext';
 		this.feedbacktext.style.left = `${centerX - inputWidth / 2 + 30}px`;
 		this.feedbacktext.style.top = `${centerY - inputHeight / 2 - (inputHeight + gap - 160)}px`;
 		this.feedbacktext.innerText = '';
@@ -201,6 +206,9 @@ export default class PlayerSelectionScene extends Phaser.Scene {
 
 	handleLogout() {
 		localStorage.removeItem('token');
+		document.getElementById('playernametext')?.remove();
+		document.getElementById('feedbacktext')?.remove();
+		document.getElementById('playernameinput')?.remove();
 		this.scene.sleep('PlayerSelectionScene');
 		this.scene.start('LoginScene');
 	}

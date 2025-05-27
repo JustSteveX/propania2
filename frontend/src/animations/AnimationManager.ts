@@ -86,6 +86,38 @@ export default class AnimationManager {
 				frameRate: 5,
 				repeat: 0,
 			},
+			{
+				key: 'treecut_up',
+				row: 40,
+				startColumn: 0,
+				endColumn: 3,
+				frameRate: 6,
+				repeat: 0,
+			},
+			{
+				key: 'treecut_down',
+				row: 41,
+				startColumn: 0,
+				endColumn: 3,
+				frameRate: 6,
+				repeat: 0,
+			},
+			{
+				key: 'treecut_left',
+				row: 42,
+				startColumn: 0,
+				endColumn: 3,
+				frameRate: 6,
+				repeat: 0,
+			},
+			{
+				key: 'treecut_right',
+				row: 43,
+				startColumn: 0,
+				endColumn: 3,
+				frameRate: 6,
+				repeat: 0,
+			},
 		];
 
 		animations.forEach((anim) => {
@@ -96,7 +128,7 @@ export default class AnimationManager {
 					end: this.getFrameIndex(anim.row, anim.endColumn),
 				}),
 				frameRate: anim.frameRate,
-				repeat: -1,
+				repeat: anim.repeat ?? -1,
 			});
 			this.animationKeys.push(anim.key);
 		});

@@ -1,0 +1,16 @@
+[
+	{
+		"skill_id": 1,
+		"name": "cutting wood",
+		"lvl": 1,
+		"description": "can fell trees and produce logs",
+		"cooldown": 10
+	},
+	{
+		"skill_id": 2,
+		"name": "cutting boards",
+		"lvl": 1,
+		"description": "can make boards from logs",
+		"cooldown": 5
+	}
+]

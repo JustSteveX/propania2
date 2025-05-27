@@ -86,25 +86,9 @@ export default class UIScene extends Phaser.Scene {
 			})
 			.setScrollFactor(0);
 
-		this.velocityText = this.add
-			.text(10, this.cameras.main.height - 200, 'Velocity: (0, 0)', {
-				fontSize: '18px',
-				fontFamily: 'PerryGothic',
-				color: '#ffffff',
-			})
-			.setScrollFactor(0);
-
-		this.lastDirection = this.add
-			.text(10, this.cameras.main.height - 220, 'Velocity: (0, 0)', {
-				fontSize: '18px',
-				fontFamily: 'PerryGothic',
-				color: '#ffffff',
-			})
-			.setScrollFactor(0);
-
 		// Joystick-Position und Größe
 		const joystickRadius = 50;
-		const joystickX = 100;
+		const joystickX = 80;
 		const joystickY = this.cameras.main.height - 100;
 
 		// Joystick-Basis und Stick erstellen
@@ -173,16 +157,13 @@ export default class UIScene extends Phaser.Scene {
 
 		// EventListener für Spielerposition (von der Hauptszene aktualisiert)
 		this.events.on('updatePlayerPosition', this.updatePlayerPosition, this);
-		this.events.on('updateVelocity', this.updateVelocity, this);
-		this.events.on('lastDirection', this.updatelastDirection, this);
+		//this.events.on('updateVelocity', this.updateVelocity, this);
+		//	this.events.on('lastDirection', this.updatelastDirection, this);
 		this.events.on('openInventory', this.openInventory, this);
 
 		this.actionbutton = this.add
-			.sprite(
-				this.cameras.main.width - 100,
-				this.cameras.main.height - 100,
-				'actionbutton'
-			)
+			.sprite(80, this.cameras.main.height - 220, 'actionbutton')
+
 			.setInteractive()
 			.on('pointerdown', () => {
 				this.events.emit('uiAction');
@@ -228,16 +209,6 @@ export default class UIScene extends Phaser.Scene {
 		this.uiText!.setText(
 			`Player Position: (${Math.round(playerX)}, ${Math.round(playerY)})`
 		);
-	}
-
-	updateVelocity(velocityX: number, velocityY: number) {
-		this.velocityText!.setText(
-			`Velocity: (${Math.round(velocityX)}, ${Math.round(velocityY)}})`
-		);
-	}
-
-	updatelastDirection(lastDirection: Direction) {
-		this.lastDirection!.setText(`lastDirection: ${lastDirection}`);
 	}
 
 	getInventory() {

@@ -1,0 +1,11 @@
+[
+	{
+		"id": 1,
+		"name": "woodcutter",
+		"description": "can fell and process trees",
+		"levelRequirement": 1,
+		"icon": "woodcutter",
+		"lvl": 1,
+		"skills": [1, 2]
+	}
+]
