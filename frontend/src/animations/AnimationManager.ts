@@ -1,10 +1,16 @@
-import type { Direction } from 'src/types/direction.enum';
+import { Direction } from '../types/direction.enum.ts';
+
+type PlayerState = 'idle' | 'walk' | 'run' | 'pickup' | 'treecut';
 
 export default class AnimationManager {
 	private scene: Phaser.Scene;
 	private player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 	private currentAnimationKey: string = '';
 	private animationKeys: string[] = [];
+
+	private currentState: PlayerState = 'idle';
+	private currentDirection: Direction = Direction.LEFT;
+	private lastDirection: Direction = Direction.DOWN;
 
 	constructor(
 		scene: Phaser.Scene,
@@ -88,33 +94,33 @@ export default class AnimationManager {
 			},
 			{
 				key: 'treecut_up',
-				row: 40,
-				startColumn: 0,
-				endColumn: 3,
+				row: 12,
+				startColumn: 5,
+				endColumn: 0,
 				frameRate: 6,
 				repeat: 0,
 			},
 			{
 				key: 'treecut_down',
-				row: 41,
-				startColumn: 0,
-				endColumn: 3,
+				row: 14,
+				startColumn: 5,
+				endColumn: 0,
 				frameRate: 6,
 				repeat: 0,
 			},
 			{
 				key: 'treecut_left',
-				row: 42,
-				startColumn: 0,
-				endColumn: 3,
+				row: 13,
+				startColumn: 5,
+				endColumn: 0,
 				frameRate: 6,
 				repeat: 0,
 			},
 			{
 				key: 'treecut_right',
-				row: 43,
-				startColumn: 0,
-				endColumn: 3,
+				row: 15,
+				startColumn: 5,
+				endColumn: 0,
 				frameRate: 6,
 				repeat: 0,
 			},
@@ -141,41 +147,61 @@ export default class AnimationManager {
 	}
 
 	/**
-	 * Spielt die passende Animation basierend auf der Bewegungsrichtung und Geschwindigkeit.
-	 * Gibt den aktuell gespielten Animations-Key zurück.
+	 * Aktualisiert den State basierend auf Richtung, Geschwindigkeit und Aktion
+	 * und spielt die passende Animation nur wenn sich etwas geändert hat.
 	 */
-
-	playAnimation(
+	public updateState(
 		direction: Direction,
-		velocity: number[],
-		isActionPressed: boolean
+		velocity: [number, number],
+		isActionPressed: boolean,
+		actionType: 'pickup' | 'treecut' | null = null
 	): string {
 		const [velocityX, velocityY] = velocity;
 		const maxSpeed = Math.max(Math.abs(velocityX), Math.abs(velocityY));
-		let walkState: string;
-		if (isActionPressed) {
-			walkState = 'pickup';
+
+		let newState: PlayerState;
+
+		// NEU: Action-Type hat Priorität
+		if (isActionPressed && actionType) {
+			newState = actionType;
 		} else if (maxSpeed === 0) {
-			walkState = 'idle';
+			newState = 'idle';
 		} else if (maxSpeed <= 60) {
-			walkState = 'walk';
+			newState = 'walk';
 		} else {
-			walkState = 'run';
+			newState = 'run';
 		}
 
-		const animationName = `${walkState}_${direction}`;
-		this.player.anims.play(animationName, true);
-		this.currentAnimationKey = animationName;
+		// Falls Richtung 0 ist (kein Input), dann lastDirection verwenden
+		let newDirection = direction;
+		if (!newDirection) {
+			newDirection = this.lastDirection;
+		}
+
+		// Wenn sich State oder Richtung ändert, Animation wechseln
+		if (
+			newState !== this.currentState ||
+			newDirection !== this.currentDirection
+		) {
+			this.currentState = newState;
+			this.currentDirection = newDirection;
+			this.lastDirection = newDirection;
+
+			const animationName = `${newState}_${newDirection}`;
+			this.player.anims.play(animationName, true);
+			this.currentAnimationKey = animationName;
+		}
+
 		return this.currentAnimationKey;
 	}
 
 	// Gibt den aktuell verwendeten Animations-Key zurück
-	getCurrentAnimationKey(): string {
+	public getCurrentAnimationKey(): string {
 		return this.currentAnimationKey;
 	}
 
 	// Ermöglicht den Zugriff auf alle erstellten Animationen (Keys)
-	getAvailableAnimations(): string[] {
+	public getAvailableAnimations(): string[] {
 		return this.animationKeys;
 	}
 }

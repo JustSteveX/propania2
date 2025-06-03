@@ -178,35 +178,6 @@ export default class GameScene extends Phaser.Scene {
 		const tree = treeManager.createTree(0, 400);
 		this.objectsGroup.add(tree);
 
-		// Only add collider if actionzone is defined
-		if (this.actionzone) {
-			this.physics.add.collider(
-				this.actionzone,
-				treeManager.getTrees(),
-				(player, collidedTree) => {
-					// Tree interaction logic here
-					const dir = this.inputManager?.getDirection();
-					//if (!this.inputManager?.isActionPressed()) {
-					const anim = `treecut_${dir}`;
-					(player as Phaser.Physics.Arcade.Sprite).anims.play(anim, true);
-					console.log(
-						`Player ${this.playerData.name} is cutting a tree in direction ${dir}`
-					);
-					// Tree bounce
-					const treeSprite = collidedTree as Phaser.Physics.Arcade.Sprite;
-					this.tweens.add({
-						targets: treeSprite,
-						x: treeSprite.x + Phaser.Math.Between(-5, 5),
-						y: treeSprite.y + Phaser.Math.Between(-5, 5),
-						duration: 100,
-						yoyo: true,
-						repeat: 2,
-					});
-					//}
-				}
-			);
-		}
-
 		// Falls der lokale Spieler schon existiert, initialisiere Steuerung und Animationen
 		if (this.player) {
 			this.cameraControl = new CameraControl(this, this.player);
@@ -235,6 +206,33 @@ export default class GameScene extends Phaser.Scene {
 		// Collisions
 		this.physics.add.collider(this.playersGroup, this.objectsGroup);
 		this.physics.add.collider(this.playersGroup, this.playersGroup);
+
+		// Only add collider if actionzone is defined
+		if (this.actionzone) {
+			this.physics.add.collider(
+				this.actionzone,
+				treeManager.getTrees(),
+				(player, collidedTree) => {
+					// Tree interaction logic here
+					const dir = this.inputManager?.getDirection();
+					if (this.inputManager?.isActionPressed()) {
+						const anim = `treecut_${dir}`;
+
+						this.player?.anims.play(anim);
+						// Tree bounce
+						const treeSprite = collidedTree as Phaser.Physics.Arcade.Sprite;
+						this.tweens.add({
+							targets: treeSprite,
+							x: treeSprite.x,
+							y: treeSprite.y + 0.2,
+							duration: 100,
+							yoyo: true,
+							repeat: 0,
+						});
+					}
+				}
+			);
+		}
 
 		// Physics
 
@@ -275,11 +273,14 @@ export default class GameScene extends Phaser.Scene {
 		const velocity = this.inputManager.handlePlayerMovement();
 		const direction: Direction = this.inputManager.getDirection();
 		// Ermittelt den aktuellen Animations-Key (z. B. 'walk_up', 'idle_right', etc.)
-		const currentAnimKey = this.animationManager.playAnimation(
+
+		this.animationManager?.updateState(
 			direction,
-			velocity,
+			[velocity[0], velocity[1]],
 			this.inputManager.getAction()
 		);
+
+		const currentAnimKey = this.animationManager.getCurrentAnimationKey();
 
 		// Kamera aktualisieren
 		this.cameraControl.update();
