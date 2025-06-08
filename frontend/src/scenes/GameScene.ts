@@ -48,6 +48,8 @@ export default class GameScene extends Phaser.Scene {
 
 	//Sounds
 	private popsound!: Phaser.Sound.BaseSound;
+	private cuttingtreesound!: Phaser.Sound.BaseSound;
+	private treefallsound!: Phaser.Sound.BaseSound;
 
 	//#########################################################################################################################################//
 
@@ -77,6 +79,8 @@ export default class GameScene extends Phaser.Scene {
 
 		// Audio
 		this.popsound = this.sound.add('popsound');
+		this.cuttingtreesound = this.sound.add('cuttingtree');
+		this.treefallsound = this.sound.add('treefall');
 		this.itemsGroup = this.physics.add.group();
 
 		// Load Items
@@ -207,28 +211,22 @@ export default class GameScene extends Phaser.Scene {
 		this.physics.add.collider(this.playersGroup, this.objectsGroup);
 		this.physics.add.collider(this.playersGroup, this.playersGroup);
 
-		// Only add collider if actionzone is defined
+		// Cutting Trees
 		if (this.actionzone) {
 			this.physics.add.collider(
 				this.actionzone,
 				treeManager.getTrees(),
 				(player, collidedTree) => {
-					// Tree interaction logic here
-					const dir = this.inputManager?.getDirection();
-					if (this.inputManager?.isActionPressed()) {
-						const anim = `treecut_${dir}`;
-
-						this.player?.anims.play(anim);
-						// Tree bounce
-						const treeSprite = collidedTree as Phaser.Physics.Arcade.Sprite;
-						this.tweens.add({
-							targets: treeSprite,
-							x: treeSprite.x,
-							y: treeSprite.y + 0.2,
-							duration: 100,
-							yoyo: true,
-							repeat: 0,
-						});
+					if (this.inputManager) {
+						treeManager.setupCuttingInteraction(
+							this.actionzone as Phaser.GameObjects.GameObject,
+							this.inputManager,
+							this.player,
+							this.cuttingtreesound,
+							this.treefallsound,
+							this.popsound,
+							this.tweens
+						);
 					}
 				}
 			);

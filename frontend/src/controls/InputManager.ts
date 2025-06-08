@@ -179,6 +179,19 @@ export default class InputManager {
 		return isPressed;
 	}
 
+	isActionJustPressed(): boolean {
+		// Prüfe, ob E gerade neu gedrückt wurde
+		const justPressed =
+			Phaser.Input.Keyboard.JustDown(this.keys!['E']) || this.uiActionPressed;
+
+		// UI-Aktion zurücksetzen
+		if (this.uiActionPressed) {
+			this.uiActionPressed = false;
+		}
+
+		return justPressed;
+	}
+
 	getAction(): boolean {
 		return this.Action;
 	}

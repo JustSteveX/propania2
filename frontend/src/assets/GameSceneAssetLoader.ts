@@ -1,6 +1,8 @@
 export function preloadAssets(scene: Phaser.Scene): void {
 	//Audio
 	scene.load.audio('popsound', 'assets/sounds/pop.mp3');
+	scene.load.audio('cuttingtree', 'assets/sounds/cuttingtree.mp3');
+	scene.load.audio('treefall', 'assets/sounds/treefall.mp3');
 
 	// Assets laden
 	scene.load.tilemapTiledJSON('map', 'assets/map/maps/map.json');
@@ -30,6 +32,14 @@ export function preloadAssets(scene: Phaser.Scene): void {
 		frameConfig: {
 			frameWidth: 512,
 			frameHeight: 15,
+		},
+	});
+	scene.load.image({
+		key: 'Log',
+		url: 'assets/items/log.png',
+		frameConfig: {
+			frameWidth: 720,
+			frameHeight: 720,
 		},
 	});
 }
