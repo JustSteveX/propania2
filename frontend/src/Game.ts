@@ -13,6 +13,7 @@ const config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
 	width: window.innerWidth,
 	height: window.innerHeight,
+	pixelArt: true,
 	parent: 'game-container',
 	scale: {
 		mode: Phaser.Scale.RESIZE, // Passt das Spiel an die Fenstergröße an

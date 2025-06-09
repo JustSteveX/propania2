@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { Player } from '../types/players.type.ts';
 
 export default class TreeManager {
 	private scene: Phaser.Scene;
@@ -17,13 +18,13 @@ export default class TreeManager {
 			y,
 			'tree'
 		) as Phaser.Physics.Arcade.Sprite;
-		tree.setOrigin(0.5, 1);
-		tree.setScale(0.5);
-		tree.setData('chopcount', Math.floor(Math.random() * (3 - 2 + 1)) + 2);
+		tree.setOrigin(0.5, 0.5);
+		tree.setScale(1);
+		tree.setData('chopcount', Math.floor(Math.random() * (10 - 5 + 1)) + 5);
 		this.trees.add(tree);
 		if (tree.body) {
-			tree.body.setSize(100, 80);
-			tree.body.setOffset(135, 300);
+			tree.body.setSize(32, 16);
+			tree.body.setOffset(32, 80);
 			tree.body.pushable = false;
 		}
 		return tree;
@@ -44,8 +45,8 @@ export default class TreeManager {
 	): Promise<void> {
 		for (let i = 0; i < 3; i++) {
 			// Random offset in Bereich [-20, 20]
-			const randomOffsetX = Math.random() * 40 - 20;
-			const randomOffsetY = Math.random() * 40 - 20;
+			const randomOffsetX = Math.random() * 40;
+			const randomOffsetY = Math.random() * 40;
 
 			const log = this.scene.physics.add.sprite(
 				x + randomOffsetX,
@@ -54,7 +55,7 @@ export default class TreeManager {
 			);
 			log.setScale(0.3);
 			log.setOrigin(0.5, 1);
-			log.setDisplaySize(32, 32);
+			log.setDisplaySize(16, 16);
 			this.logs.add(log);
 			popsound.play();
 
@@ -69,8 +70,10 @@ export default class TreeManager {
 			isActionJustPressed: () => boolean;
 		},
 		player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | undefined,
+		playerData: Player,
 		cuttingtreesound: Phaser.Sound.BaseSound,
 		treefallsound: Phaser.Sound.BaseSound,
+		treefalldownsound: Phaser.Sound.BaseSound,
 		popsound: Phaser.Sound.BaseSound,
 		tweens: Phaser.Tweens.TweenManager
 	): void {
@@ -94,24 +97,40 @@ export default class TreeManager {
 						onComplete: () => {
 							cuttingtreesound.play();
 							let chopCount: number = treeSprite.getData('chopcount');
-							chopCount--;
-							treeSprite.setData('chopcount', chopCount);
+							if (chopCount > 0) {
+								chopCount--;
+								treeSprite.setData('chopcount', chopCount);
+							}
 
 							if (chopCount <= 0) {
 								treefallsound.play();
+								if (treeSprite.body) {
+									treeSprite.body.enable = false;
+								}
 
-								const options = [90, -90];
-								const randomOffset =
-									options[Math.floor(Math.random() * options.length)];
+								let treeangle: number = 0;
+								let treexoffset: number = 0;
+
+								if (playerData.direction == 'left') {
+									treeangle = -90;
+									treexoffset = -30;
+								} else {
+									treeangle = 90;
+									treexoffset = +30;
+								}
+
 								// Baum fällt
 								tweens.add({
 									targets: treeSprite,
-									angle: randomOffset,
+									y: treeSprite.y + 30,
+									x: treeSprite.x + treexoffset,
+									angle: treeangle,
 									duration: 3000,
 									ease: 'Sine.easeInOut',
 									onComplete: () => {
+										treefalldownsound.play();
 										// Logs spawnen
-										this.spawnLogs(treeSprite.x, treeSprite.y - 20, popsound);
+										this.spawnLogs(treeSprite.x, treeSprite.y, popsound);
 										// Baum entfernen
 										treeSprite.destroy();
 									},

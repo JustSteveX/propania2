@@ -50,6 +50,7 @@ export default class GameScene extends Phaser.Scene {
 	private popsound!: Phaser.Sound.BaseSound;
 	private cuttingtreesound!: Phaser.Sound.BaseSound;
 	private treefallsound!: Phaser.Sound.BaseSound;
+	private treefalldownsound!: Phaser.Sound.BaseSound;
 
 	//#########################################################################################################################################//
 
@@ -81,6 +82,7 @@ export default class GameScene extends Phaser.Scene {
 		this.popsound = this.sound.add('popsound');
 		this.cuttingtreesound = this.sound.add('cuttingtree');
 		this.treefallsound = this.sound.add('treefall');
+		this.treefalldownsound = this.sound.add('treefalldown');
 		this.itemsGroup = this.physics.add.group();
 
 		// Load Items
@@ -222,8 +224,10 @@ export default class GameScene extends Phaser.Scene {
 							this.actionzone as Phaser.GameObjects.GameObject,
 							this.inputManager,
 							this.player,
+							this.playerData,
 							this.cuttingtreesound,
 							this.treefallsound,
+							this.treefalldownsound,
 							this.popsound,
 							this.tweens
 						);
