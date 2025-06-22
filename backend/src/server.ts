@@ -29,6 +29,7 @@ const allowedOrigins = [
 	'http://api.propania2.de',
 	'http://localhost:8080',
 	'https://localhost:8080',
+	'http://192.168.178.89:8080',
 ];
 
 // CORS-Konfiguration mit dynamischer Origin-Zulassung
@@ -71,7 +72,7 @@ app.use('/protected', protectedRoutes);
 // HTTPS-Server mit Socket.IO initialisieren
 const httpsServer = https.createServer(sslOptions, app);
 const httpServer = http.createServer(app);
-SocketManager.initialize(httpsServer);
+SocketManager.initialize(httpServer);
 
 // Server starten  auf https oder http umstellen
 httpServer.listen(SERVER_PORT, '0.0.0.0', () => {
